@@ -80,7 +80,7 @@ gunicorn --workers 5 --bind 0.0.0.0:5002 shanari.webapp:app
 
 ## 使用方法
 とりあえず見たままです。  
-![sample](https://github.com/Yogorouza/Shanari/assets/31218595/d0b3db2e-eaeb-43a0-ba9e-0be76348804f)  
+![sample](https://github.com/Yogorouza/Shanari/assets/31218595/51870c00-f62f-49ae-ae96-d0415adcfff1) 
 - SNS名をタップして投稿のON/OFFを切り替え  
 - 画像追加ボタンをタップして添付画像を選択(4枚まで,PCブラウザではクリップボード貼り付けが動くかも)  
 - テキストエリアに投稿内容を記述(各SNSの最大文字数は考慮せずそのまま流します)  
