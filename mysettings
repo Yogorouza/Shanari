@@ -1,0 +1,27 @@
+#FLASKアプリケーション定義
+export FLASK_APP=shanari.webapp
+
+#認証関連(いい感じに変更して使ってください)
+export FLASK_SECRET_KEY='ac6adf3964047db6'
+export FLASK_LOGIN_ID='user'
+export FLASK_LOGIN_PASSWORD='pass'
+
+#画像ファイルアップロード用一時フォルダ(ローカルパス)
+export FLASK_UPLOAD_FOLDER='./imgtemp'
+
+#Twitter
+export FLASK_TWITTER_BEARAR_TOKEN=''
+export FLASK_TWITTER_CONSUMER_KEY=''
+export FLASK_TWITTER_CONSUMER_SECRET=''
+export FLASK_TWITTER_ACCESS_TOKEN_KEY=''
+export FLASK_TWITTER_ACCESS_TOKEN_SECRET=''
+
+#Misskey
+export FLASK_MISSKEY_HOST='misskey.io'
+export FLASK_MISSKEY_TOKEN=''
+
+#Bluesky
+export FLASK_BLUESKY_AGENT='https://bsky.social'
+export FLASK_BLUESKY_ID='xxxxxx.bsky.social'
+export FLASK_BLUESKY_PASS=''
+export FLASK_BLUESKY_MAX_FILE_SIZE=1000000

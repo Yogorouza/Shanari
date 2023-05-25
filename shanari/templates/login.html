@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<title>Shanari:Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="theme-color" content="#f6ecc2"/>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
+    <link type="image/png" sizes="180x180" rel="icon" href="/static/images/icon-180x180.png">
+    <link rel="stylesheet" href="/static/css/login.css">
+    <script>      
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.register ('/static/service-worker.js')
+        }
+    </script>
+</head>
+<body>
+	<div class="login-box">
+		<h1>Shanari</h1>
+        <form id="login-form" method="post">
+            {{ form.csrf_token }}
+            <p id="textbox"><label for="user_id">user id</label>
+            {{ form.user_id }}
+            <p id="textbox"><label for="password">password</label>
+            {{ form.password }}
+			<input type="submit" name="submit" value="Login">
+        </form>
+	</div>
+</body>
+</html>

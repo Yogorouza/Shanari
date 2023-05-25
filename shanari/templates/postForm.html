@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>Shanari</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="theme-color" content="#f6ecc2"/>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
+    <link type="image/png" sizes="180x180" rel="icon" href="/static/images/icon-180x180.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/mobile.css" media="screen and (max-width:480px)">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script>      
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.register ('/static/service-worker.js')
+        }
+    </script>
+</head>
+
+<body onload="clearForm()">
+    <form id="uploadForm" class="upload-form">
+        <div class="parent">
+            <div class="gridChk"> <!-- 送信先選択ボタン -->
+                <div class="twitterArea" id="makeImg">
+                    <input type="checkbox" id="twitterCheck" name="twitterCheck" checked="">
+                    <label for="twitterCheck"><span></span></label>
+                </div>
+                <div class="misskeyArea" id="makeImg">
+                    <input type="checkbox" id="misskeyCheck" name="misskeyCheck" checked="">
+                    <label for="misskeyCheck"><span></span></label>
+                </div>
+                <div class="blueskyArea" id="makeImg">
+                    <input type="checkbox" id="blueskyCheck" name="blueskyCheck" checked="">
+                    <label for="blueskyCheck"><span></span></label>
+                </div>
+            </div>
+            <div class="gridTitle"> <!-- ソフトウェア名 -->
+                Shanari
+            </div>
+            <div class="gridWordCt"> <!-- 入力済文字数 -->
+                <p id="word-count">0 / 280</p>
+            </div>
+            <div class="gridTextarea"> <!-- 投稿テキスト欄 -->
+                <textarea id="postText" name="postText"></textarea>
+            </div>
+            <div class="gridBtn"> <!-- POST, CLEARボタン -->
+                <button type="button" onclick="postTweet()">POST</button>
+                <button type="reset" onclick="clearForm()">CLEAR</button>
+                <div class="resultText">
+                    <p id="resultMsg"></p>
+                </div>
+            </div>
+            <div class="gridImgBtn"> <!-- 画像添付ボタン -->
+                <input type="file" id="files" name="pics" multiple onChange="storePics(event)" class="custom-file-upload">
+                <label for="files"><span class="material-symbols-outlined bigsize">add_photo_alternate</span></label>
+            </div>
+            <div class="gridImg"> <!-- 添付画像プレビュー欄 -->
+                <div id="previewArea"></div>
+            </div>
+            <div class="gridLog"> <!-- ログメッセージ -->
+            </div>
+        </div>
+    </form>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        var picCnt = 0;
+
+        // eventからクリップボードのアイテムを取り出し送信する
+        document.onpaste = function (event) {
+            let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                // 画像だけ
+                if (item.type.indexOf('image') != -1) {
+                    // 4件以上追加できない
+                    if (picCnt++ >= 4) return;
+                    // プレビュー表示して送信
+                    let file = item.getAsFile();
+                    imgPreview(file);
+                    let formData = new FormData();
+                    formData.append('pics', file);
+                    postImg(formData);
+                }
+            }
+        }
+
+        // アップロード指定されたファイルを送信する
+        function storePics(event) {
+            let formData = new FormData();
+            for (let file of event.target.files) {
+                // 画像だけ
+                if (file.type.indexOf('image') < 0) continue;
+                // 4件以上追加できない
+                if (picCnt++ >= 4) return;
+                // プレビュー表示して送信用のformDataに追加する
+                imgPreview(file);
+                formData.append('pics', file);
+            }
+            //送信
+            postImg(formData);
+        }
+
+        // ファイルのプレビューを表示
+        function imgPreview(file) {
+            let preview = document.getElementById('previewArea');
+            let reader = new FileReader();
+            reader.onload = function (event) {
+                let img = document.createElement('img');
+                img.setAttribute('src', reader.result);
+                img.setAttribute('id', 'previewImage-previewArea');
+                img.setAttribute('class', 'tmp');
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 画像をサーバに送信する
+        function postImg(formData) {
+            $.ajax({
+                url: '/uploadImg',
+                type: 'post',
+                data: formData,
+                dataType: 'text',
+                processData: false,
+                contentType: false,
+                timeout: 10000
+            }).always(function(receivedData) {
+                let resultMsg = receivedData;
+                resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
+                $('#resultMsg').html(resultMsg);
+            });
+        };
+
+        // formを初期状態に戻す
+        function clearForm() {
+            // プレビューを初期化する
+            picCnt = 0;
+            let preview = document.getElementById('previewArea');
+            while (preview.firstChild) {
+                preview.removeChild(preview.firstChild);
+            }
+            // サーバの画像フォルダを初期化する
+            let formData = new FormData();
+            $.ajax({
+                url: '/clearImg',
+                type: 'post',
+                data: formData,
+                dataType: 'text',
+                async: false,
+                processData: false,
+                contentType: false,
+                timeout: 10000
+            }).always(function(receivedData) {
+                let resultMsg = receivedData;
+                resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
+                $('#resultMsg').html(resultMsg);
+            });
+            $('#word-count').text('0 / 280');
+            document.forms['uploadForm'].reset();
+        }
+
+        // 画像以外のform情報を送信(投稿実行)
+        function postTweet() {
+            let form = $('#uploadForm').get()[0];
+            let formData = new FormData(form);
+            let receivedData = ''
+            $.ajax({
+                url: '/postTweet',
+                type: 'post',
+                data: formData,
+                dataType: 'text',
+                async: false,
+                processData: false,
+                contentType: false,
+                timeout: 10000
+            }).always(function(receivedData) {
+                resultMsg = receivedData;
+            });
+            clearForm();
+            resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
+            $('#resultMsg').html(resultMsg);
+        }
+
+        // textareaの文字数カウント
+        $(function () {
+            $('textarea').keyup(function () {
+                let str = $(this).val();
+                let len = 0;
+                for (let i = 0; i < str.length; i++) {
+                    let c = str.charCodeAt(i);
+                    if ((c >= 0x0 && c < 0x81) || (c == 0xf8f0) || (c >= 0xff61 && c < 0xffa0) || (c >= 0xf8f1 && c < 0xf8f4))
+                        len += 1;
+                    else
+                        len += 2;
+                }
+                $('#word-count').text(len + ' / 280');
+            });
+        });
+    </script>
+</body>
+
+</html>
