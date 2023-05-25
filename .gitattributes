@@ -1,3 +1,4 @@
 shanari/config/* linguist-vendored
 shanari/static/* linguist-vendored
+shanari/static/css/* linguist-vendored
 shanari/templates/* linguist-vendored
