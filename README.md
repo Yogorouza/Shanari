@@ -19,7 +19,7 @@ git clone https://github.com/Yogorouza/Shanari.git
 2. 仮想環境を作成しアクティベート
 ```
 cd Shanari
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
