@@ -4,7 +4,8 @@ import tweepy, misskey
 from . import app
 from flask import render_template, redirect, request
 from nanoatp import BskyAgent
-from PIL import Image
+from PIL import Image, ImageOps, ExifTags
+from PIL.ExifTags import TAGS
 
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 
@@ -130,7 +131,9 @@ def postTweet():
             pass
         else:
             resultText = '<b>Twitter</b>:OK'
-
+    else:
+        resultText = '<b>Twitter</b>:OFF'
+        
     #Misskey(Misskey.py)
     if misskeyCheck == 'on':
         try:
@@ -160,6 +163,8 @@ def postTweet():
             pass
         else:
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OK'
+    else:
+        resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OFF'
 
     #Bluesky(nanoatp)
     if blueskyCheck == 'on':
@@ -167,21 +172,24 @@ def postTweet():
             # 画像ファイルサイズ1MB上限対応
             MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
             for f in os.listdir(UPLOAD_FOLDER):
-                image_path = os.path.join(UPLOAD_FOLDER, f)
-                #とりあえずpngだったらjpgに変換
-                if f.endswith('.png'):
-                    im = Image.open(image_path)
-                    im = im.convert('RGB')
-                    image_path = image_path[:-3]+'jpg'
-                    im.save(image_path)
-                    os.remove(image_path[:-3]+'png')
-                #それでもまだでかいなら指定サイズ未満まで10%ちっこくしていく
-                with Image.open(image_path) as im:
-                    while os.path.getsize(image_path) > MAX_FILE_SIZE:
+                imagePath = os.path.join(UPLOAD_FOLDER, f)
+                #回転情報を反映
+                with Image.open(imagePath) as im:
+                    rotationImage(im)
+                #サイズ超過かつpngだったらとりあえずjpgに変換
+                if os.path.getsize(imagePath) > MAX_FILE_SIZE and f.endswith('.png'):
+                    with Image.open(imagePath) as im:
+                        im = im.convert('RGB')
+                        imagePath = imagePath[:-3]+'jpg'
+                        im.save(imagePath)
+                        os.remove(imagePath[:-3]+'png')
+                #指定サイズ未満まで10%ちっこくしていく
+                with Image.open(imagePath) as im:
+                    while os.path.getsize(imagePath) > MAX_FILE_SIZE:
                         ratio = 0.9 
                         size = tuple(int(d * ratio) for d in im.size)
                         im.thumbnail(size)
-                        im.save(image_path, quality=85, optimize=True)
+                        im.save(imagePath, quality=85, optimize=True)
             # 認証
             agent = BskyAgent(app.config['BLUESKY_AGENT'])
             agent.login(identifier=app.config['BLUESKY_ID'], password=app.config['BLUESKY_PASS'])
@@ -202,5 +210,54 @@ def postTweet():
             pass
         else:
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OK'
-
+    else:
+        resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OFF'
+        
     return resultText
+
+#exif情報に従って画像を回転させる
+def rotationImage(im):
+    #exif情報取得
+    exifTable = {}
+    try:
+        exif = None
+        exif = im._getexif()
+        if exif is not None:
+            for tagId, value in exif.items():
+                tag = TAGS.get(tagId, tagId)
+                exifTable[tag] = value
+        else:
+            return
+    except Exception:
+        return
+    #Orientationが含まれていなければ何もしない
+    if 'Orientation' not in exifTable:
+        return
+    #Orientationに従って回転させる(exif情報は削除する)
+    rotate, reverse = getExifRotation(exifTable['Orientation'])
+    with Image.new(im.mode, im.size) as newIm:
+        newIm.putdata(im.getdata())
+        if reverse == 1:
+            newIm = ImageOps.mirror(newIm)
+        if rotate != 0:
+            newIm = newIm.rotate(rotate, expand=True)
+        newIm.save(im.filename)
+
+#Orientationの回転情報を返す
+def getExifRotation(orientationNum):
+    if orientationNum == 1:
+        return 0, 0
+    if orientationNum == 2:
+        return 0, 1
+    if orientationNum == 3:
+        return 180, 0
+    if orientationNum == 4:
+        return 180, 1
+    if orientationNum == 5:
+        return 270, 1
+    if orientationNum == 6:
+        return 270, 0
+    if orientationNum == 7:
+        return 90, 1
+    if orientationNum == 8:
+        return 90, 0
