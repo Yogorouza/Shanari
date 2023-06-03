@@ -32,6 +32,9 @@ pip install -r requirements.txt
 `mysettings`に記載されている各設定値をご自身の環境に基づいて記入してください。  
 使用しないSNSの設定は空欄のままでOKです(投稿時にそのSNSをOFFにしてください)
 ```
+#FLASKアプリケーション定義
+export FLASK_APP=shanari.webapp
+
 #認証関連(いい感じに変更して使ってください)
 export FLASK_SECRET_KEY='ac6adf3964047db6'
 export FLASK_LOGIN_ID='user'
@@ -55,6 +58,7 @@ export FLASK_MISSKEY_TOKEN=''
 export FLASK_BLUESKY_AGENT='https://bsky.social'
 export FLASK_BLUESKY_ID='xxxxxx.bsky.social'
 export FLASK_BLUESKY_PASS=''
+export FLASK_BLUESKY_MAX_FILE_SIZE=1000000
 ```
 
 5. 環境変数を仮想環境に反映
@@ -78,16 +82,22 @@ flask run
 gunicorn --workers 5 --bind 0.0.0.0:5002 shanari.webapp:app
 ```
 みたいな感じで、パラメータはお好みで。  
+実運用に際しては下記みたくなるはず、です。  
+```
+gunicorn --workers 5 --bind 0.0.0.0:443 shanari.webapp:app --certfile fullchain.pem --keyfile privkey.pem
+```
 
 ## 使用方法
 とりあえず見たままです。  
-![sample](https://github.com/Yogorouza/Shanari/assets/31218595/51870c00-f62f-49ae-ae96-d0415adcfff1) 
 - SNS名をタップして投稿のON/OFFを切り替え  
 - 画像追加ボタンをタップして添付画像を選択(4枚まで,PCブラウザではクリップボード貼り付けが動くかも)  
 - テキストエリアに投稿内容を記述(各SNSの最大文字数は考慮せずそのまま流します)  
 - POSTをタップして投稿(投稿が終わると結果がボタンの下に表示されるかも)  
 - CLEARをタップして画面を初期化  
 - 要件を満たしていればiOSでホーム画面に追加するとPWAぽく動作する(ようです)  
+![sample1](https://github.com/Yogorouza/Shanari/assets/31218595/064973e3-5dc7-4895-9617-e09995fcbc19)
+- 同じく要件を満たしていればPC版chromeでアプリショートカット化が出来る(ようです)
+![sample2](https://github.com/Yogorouza/Shanari/assets/31218595/741db2e1-a7a9-4dec-acb8-ec224568762a)
 
 ## 注意点
 - 素人の仕事ですので拙い点はご容赦を
