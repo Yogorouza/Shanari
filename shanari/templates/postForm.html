@@ -19,7 +19,7 @@
     </script>
 </head>
 
-<body onload="clearForm()">
+<body onload="initialize()">
     <form id="uploadForm" class="upload-form">
         <div class="parent">
             <div class="gridChk"> <!-- 送信先選択ボタン -->
@@ -45,11 +45,11 @@
             <div class="gridTextarea"> <!-- 投稿テキスト欄 -->
                 <textarea id="postText" name="postText"></textarea>
             </div>
-            <div class="gridBtn"> <!-- POST, CLEARボタン -->
-                <button type="button" onclick="postTweet()">POST</button>
-                <button type="reset" onclick="clearForm()">CLEAR</button>
+            <div class="gridBtn"> <!-- POST, CLEARボタン / 結果テキスト -->
+                <button id="sendButton" type="button" onclick="postTweet()">POST</button>
+                <button id="clearButton" type="reset" onclick="initialize()">CLEAR</button>
                 <div class="resultText">
-                    <p id="resultMsg"></p>
+                    <p id="spinner" class="spinner"></p><p id="resultMsg"></p>
                 </div>
             </div>
             <div class="gridImgBtn"> <!-- 画像添付ボタン -->
@@ -135,14 +135,8 @@
             });
         };
 
-        // formを初期状態に戻す
-        function clearForm() {
-            // プレビューを初期化する
-            picCnt = 0;
-            let preview = document.getElementById('previewArea');
-            while (preview.firstChild) {
-                preview.removeChild(preview.firstChild);
-            }
+        // 機能を初期状態に戻す
+        function initialize() {
             // サーバの画像フォルダを初期化する
             let formData = new FormData();
             $.ajax({
@@ -150,7 +144,6 @@
                 type: 'post',
                 data: formData,
                 dataType: 'text',
-                async: false,
                 processData: false,
                 contentType: false,
                 timeout: 10000
@@ -159,12 +152,26 @@
                 resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
                 $('#resultMsg').html(resultMsg);
             });
+            clearForm();
+        }
+        // formを初期状態に戻す
+        function clearForm() {
+            picCnt = 0;
+            let preview = document.getElementById('previewArea');
+            while (preview.firstChild) {
+                preview.removeChild(preview.firstChild);
+            }
             $('#word-count').text('0 / 280');
             document.forms['uploadForm'].reset();
         }
 
         // 画像以外のform情報を送信(投稿実行)
         function postTweet() {
+            $('#resultMsg').html('processing...');
+            $('#sendButton').prop('disabled',true);
+            $('#clearButton').prop('disabled',true);
+            $('#files').prop('disabled',true);
+            document.getElementById('spinner').style.display = 'block';
             let form = $('#uploadForm').get()[0];
             let formData = new FormData(form);
             let receivedData = ''
@@ -173,16 +180,25 @@
                 type: 'post',
                 data: formData,
                 dataType: 'text',
-                async: false,
                 processData: false,
                 contentType: false,
-                timeout: 20000
-            }).always(function(receivedData) {
+                timeout: 30000
+            }).done(function(receivedData) {
                 resultMsg = receivedData;
+                new Promise((resolve) => {
+                    if(resultMsg.indexOf('ERROR') == -1){
+                        clearForm();
+                    }
+                    resolve();
+                }).then(() => {
+                    document.getElementById('spinner').style.display = 'none';
+                    resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
+                    $('#resultMsg').html(resultMsg);
+                    $('#sendButton').prop('disabled',false);
+                    $('#clearButton').prop('disabled',false);
+                    $('#files').prop('disabled',false);
+                });
             });
-            clearForm();
-            resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-            $('#resultMsg').html(resultMsg);
         }
 
         // textareaの文字数カウント

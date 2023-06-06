@@ -52,7 +52,7 @@ def logout():
 def index():
     return render_template('postForm.html')
 
-# --- 画像添付(非同期) ---
+# --- 画像添付 ---
 @app.route('/uploadImg', methods=['POST'])
 @flask_login.login_required
 def uploadImg():
@@ -70,7 +70,7 @@ def uploadImg():
         pass
     return resultText
 
-# --- 画面初期化(同期) ---
+# --- 画面初期化 ---
 @app.route('/clearImg', methods=['POST'])
 @flask_login.login_required
 def clearImg():
@@ -84,7 +84,7 @@ def clearImg():
         pass
     return resultText
 
-# --- 投稿処理(同期) ---
+# --- 投稿処理 ---
 @app.route('/postTweet', methods=['POST'])
 @flask_login.login_required
 def postTweet():
@@ -97,11 +97,11 @@ def postTweet():
 
     # 本文が空白だったらメッセージを返す
     if postText == '':
-        resultText = 'Content is blank.'
+        resultText = '[ERROR]Content is blank.'
         return resultText
 
     #Twitter(Tweepy)
-    if twitterCheck == 'on':
+    if twitterCheck == 'on' and app.config['TWITTER_BEARAR_TOKEN'] != '':
         try:
             # APIv1認証
             auth = tweepy.OAuthHandler(app.config['TWITTER_CONSUMER_KEY'], app.config['TWITTER_CONSUMER_SECRET'])
@@ -135,7 +135,7 @@ def postTweet():
         resultText = '<b>Twitter</b>:OFF'
         
     #Misskey(Misskey.py)
-    if misskeyCheck == 'on':
+    if misskeyCheck == 'on' and app.config['MISSKEY_TOKEN'] != '':
         try:
             # 認証
             api = misskey.Misskey(app.config['MISSKEY_HOST'])
@@ -167,7 +167,7 @@ def postTweet():
         resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OFF'
 
     #Bluesky(nanoatp)
-    if blueskyCheck == 'on':
+    if blueskyCheck == 'on' and app.config['BLUESKY_PASS'] != '':
         try:
             # 画像ファイルサイズ1MB上限対応
             MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
@@ -213,6 +213,11 @@ def postTweet():
     else:
         resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OFF'
         
+    # エラーが発生していない場合は一時フォルダの画像をすべて削除
+    if resultText.find('ERROR') == -1:
+        for f in os.listdir(UPLOAD_FOLDER):
+            os.remove(os.path.join(UPLOAD_FOLDER, f))
+
     return resultText
 
 #exif情報に従って画像を回転させる

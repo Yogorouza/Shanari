@@ -22,7 +22,7 @@ p{
     "gridBtn      gridBtn      gridImgBtn   gridImg     "
     "gridLog      gridLog      gridLog      gridLog     ";
 }
-.gridChk      {grid-area: gridChk; display: flex;}
+.gridChk      {grid-area: gridChk; display: flex; justify-content: flex-start; }
 .gridTitle    {grid-area: gridTitle; text-align: right; vertical-align: middle; padding-right: 10px;
                 font-size: 24px; font-family: 'Montserrat', sans-serif; color: rgb(224, 211, 157);
 }
@@ -32,6 +32,23 @@ p{
 .gridImgBtn   {grid-area: gridImgBtn; text-align: right;}
 .gridImg      {grid-area: gridImg;}
 .gridLog      {grid-area: gridLog; margin: 10px 5px; font-size: small; color: #888;}
+
+/*=spinner===============================================*/
+.spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 2px solid #3498db;
+    animation: spin 1s linear infinite;
+    display: none;
+    margin-right: 5px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 /*=INPUT Type="File"===============================================*/
 .custom-file-upload {
@@ -101,6 +118,7 @@ textarea {
 
 /*=ResultText===============================================*/
 .resultText {
+    display: flex;
     margin: 10px 5px;
     font-size: small;
     color: #888;
@@ -123,7 +141,7 @@ button:hover {
 
 /*=TwitterCheckbox===============================================*/
 .twitterArea {
-    margin: auto;
+    margin: 0px;
     width: 90px;
 }
 .twitterArea input[type="checkbox"] {
@@ -158,7 +176,7 @@ button:hover {
 
 /*=MisskeyCheckbox===============================================*/
 .misskeyArea {
-    margin: auto;
+    margin: 0px;
     width: 90px;
 }
 .misskeyArea input[type="checkbox"] {
@@ -193,7 +211,7 @@ button:hover {
 
 /*=BlueskyCheckbox===============================================*/
 .blueskyArea {
-    margin: auto;
+    margin: 0px;
     width: 90px;
 }
 .blueskyArea input[type="checkbox"] {
