@@ -1,11 +1,15 @@
 import os, datetime, time
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
+import py_ogp_parser.parser
+import urllib.error
+import urllib.request
 from . import app
 from flask import render_template, redirect, request
 from nanoatp import BskyAgent
 from PIL import Image, ImageOps, ExifTags
 from PIL.ExifTags import TAGS
+from urlextract import URLExtract
 
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 
@@ -100,7 +104,7 @@ def postTweet():
         resultText = '[ERROR]Content is blank.'
         return resultText
 
-    #Twitter(Tweepy)
+    # Twitter(Tweepy)
     if twitterCheck == 'on' and app.config['TWITTER_BEARAR_TOKEN'] != '':
         try:
             # APIv1認証
@@ -134,7 +138,7 @@ def postTweet():
     else:
         resultText = '<b>Twitter</b>:OFF'
         
-    #Misskey(Misskey.py)
+    # Misskey(Misskey.py)
     if misskeyCheck == 'on' and app.config['MISSKEY_TOKEN'] != '':
         try:
             # 認証
@@ -166,9 +170,32 @@ def postTweet():
     else:
         resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OFF'
 
-    #Bluesky(nanoatp)
+    # Bluesky(nanoatp)
     if blueskyCheck == 'on' and app.config['BLUESKY_PASS'] != '':
         try:
+            # 添付画像有無を確認
+            isFileAttached = False
+            for f in os.listdir(UPLOAD_FOLDER):
+                isFileAttached = True
+                break
+
+            # 添付画像が無ければリンクカードの生成を試みる
+            isLinkcardAttached = False
+            if(isFileAttached == False):
+                extractor = URLExtract()
+                urlList = extractor.find_urls(postText)
+                # URLが含まれていれば生成する
+                if len(urlList) > 0:
+                    status_code, result = py_ogp_parser.parser.request(urlList[0])
+                    if status_code == 200:
+                        isLinkcardAttached = True
+                        ogTitle = result['title']
+                        ogImage = result['ogp']['og:image'][0]
+                        ogImageFilename = os.path.basename(ogImage)
+                        ogDesc = result['ogp']['og:description'][0]
+                        # 一旦画像を保存
+                        downloadFile(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
+
             # 画像ファイルサイズ1MB上限対応
             MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
             for f in os.listdir(UPLOAD_FOLDER):
@@ -183,13 +210,14 @@ def postTweet():
                         imagePath = imagePath[:-3]+'jpg'
                         im.save(imagePath)
                         os.remove(imagePath[:-3]+'png')
-                #指定サイズ未満まで10%ちっこくしていく
+                #指定サイズ未満まで20%ちっこくしていく
                 with Image.open(imagePath) as im:
                     while os.path.getsize(imagePath) > MAX_FILE_SIZE:
-                        ratio = 0.9 
+                        ratio = 0.8 
                         size = tuple(int(d * ratio) for d in im.size)
                         im.thumbnail(size)
                         im.save(imagePath, quality=85, optimize=True)
+
             # 認証
             agent = BskyAgent(app.config['BLUESKY_AGENT'])
             agent.login(identifier=app.config['BLUESKY_ID'], password=app.config['BLUESKY_PASS'])
@@ -198,12 +226,22 @@ def postTweet():
             for f in os.listdir(UPLOAD_FOLDER):
                 image = agent.uploadImage(os.path.join(UPLOAD_FOLDER, f))
                 mediaList.append(image)
-            # 投稿
-            if len(mediaList) == 0:
-                record = {"text": postText}
+            # 投稿情報生成
+            if isFileAttached == False:
+                # 画像添付なし
+                if isLinkcardAttached == True and len(mediaList) > 0:
+                    # リンクカードあり
+                    external = {"uri": urlList[0], "title": ogTitle, "description": ogDesc, "thumb": mediaList[0]['image']}
+                    embed = {"$type": "app.bsky.embed.external", "external": external}
+                    record = {"text": postText, "embed": embed}
+                else:
+                    # リンクカードなし
+                    record = {"text": postText}
             else:
+                # 画像添付あり
                 embed = {"$type": "app.bsky.embed.images#main", "images": mediaList}
                 record = {"text": postText, "embed": embed}
+            # 投稿
             agent.post(record)
         except Exception as e:
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky[ERROR]</b>' + str(e)
@@ -220,9 +258,9 @@ def postTweet():
 
     return resultText
 
-#exif情報に従って画像を回転させる
+# exif情報に従って画像を回転させる
 def rotationImage(im):
-    #exif情報取得
+    # exif情報取得
     exifTable = {}
     try:
         exif = None
@@ -235,10 +273,10 @@ def rotationImage(im):
             return
     except Exception:
         return
-    #Orientationが含まれていなければ何もしない
+    # Orientationが含まれていなければ何もしない
     if 'Orientation' not in exifTable:
         return
-    #Orientationに従って回転させる(exif情報は削除する)
+    # Orientationに従って回転させる(exif情報は削除する)
     rotate, reverse = getExifRotation(exifTable['Orientation'])
     with Image.new(im.mode, im.size) as newIm:
         newIm.putdata(im.getdata())
@@ -248,7 +286,7 @@ def rotationImage(im):
             newIm = newIm.rotate(rotate, expand=True)
         newIm.save(im.filename)
 
-#Orientationの回転情報を返す
+# Orientationの回転情報を返す
 def getExifRotation(orientationNum):
     if orientationNum == 1:
         return 0, 0
@@ -266,3 +304,13 @@ def getExifRotation(orientationNum):
         return 90, 1
     if orientationNum == 8:
         return 90, 0
+
+# URL指定されたファイルを保存する
+def downloadFile(url, dstPath):
+    try:
+        with urllib.request.urlopen(url) as webFile:
+            data = webFile.read()
+            with open(dstPath, mode='wb') as localFile:
+                localFile.write(data)
+    except urllib.error.URLError as e:
+        pass
