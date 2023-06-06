@@ -7,7 +7,7 @@ import urllib.request
 from . import app
 from flask import render_template, redirect, request
 from nanoatp import BskyAgent
-from PIL import Image, ImageOps, ExifTags
+from PIL import Image, ImageOps
 from PIL.ExifTags import TAGS
 from urlextract import URLExtract
 
@@ -107,6 +107,7 @@ def postTweet():
     # Twitter(Tweepy)
     if twitterCheck == 'on' and app.config['TWITTER_BEARAR_TOKEN'] != '':
         try:
+            timeStart = time.perf_counter()
             # APIv1認証
             auth = tweepy.OAuthHandler(app.config['TWITTER_CONSUMER_KEY'], app.config['TWITTER_CONSUMER_SECRET'])
             auth.set_access_token(app.config['TWITTER_ACCESS_TOKEN_KEY'], app.config['TWITTER_ACCESS_TOKEN_SECRET'])
@@ -130,17 +131,20 @@ def postTweet():
                 client.create_tweet(text=postText)
             else:
                 client.create_tweet(text=postText, media_ids=mediaList)
+            timeEnd = time.perf_counter()
         except Exception as e:
             resultText = '<b>Twitter[ERROR]</b>' + str(e)
             pass
         else:
-            resultText = '<b>Twitter</b>:OK'
+            sec = round(timeEnd- timeStart, 1)
+            resultText = '<b>Twitter</b>:OK(' + str(sec) + 'sec)'
     else:
         resultText = '<b>Twitter</b>:OFF'
         
     # Misskey(Misskey.py)
     if misskeyCheck == 'on' and app.config['MISSKEY_TOKEN'] != '':
         try:
+            timeStart = time.perf_counter()
             # 認証
             api = misskey.Misskey(app.config['MISSKEY_HOST'])
             api.token = app.config['MISSKEY_TOKEN']
@@ -155,6 +159,7 @@ def postTweet():
                 api.notes_create(text=postText)
             else:
                 api.notes_create(text=postText, file_ids=mediaList)
+            timeEnd = time.perf_counter()
         except misskey.exceptions.MisskeyAPIException as e:
             # Exceptionが空で戻ってくるのでとりあえず仕様書通りに捕捉
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey[ERROR]</b>MisskeyAPIException : ' + str(e)
@@ -166,13 +171,15 @@ def postTweet():
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey[ERROR]</b>MisskeyMiAuthFailedException'
             pass
         else:
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OK'
+            sec = round(timeEnd- timeStart, 1)
+            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OK(' + str(sec) + 'sec)'
     else:
         resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OFF'
 
     # Bluesky(nanoatp)
     if blueskyCheck == 'on' and app.config['BLUESKY_PASS'] != '':
         try:
+            timeStart = time.perf_counter()
             # 添付画像有無を確認
             isFileAttached = False
             for f in os.listdir(UPLOAD_FOLDER):
@@ -243,11 +250,13 @@ def postTweet():
                 record = {"text": postText, "embed": embed}
             # 投稿
             agent.post(record)
+            timeEnd = time.perf_counter()
         except Exception as e:
             resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky[ERROR]</b>' + str(e)
             pass
         else:
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OK'
+            sec = round(timeEnd- timeStart, 1)
+            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OK(' + str(sec) + 'sec)'
     else:
         resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OFF'
         
