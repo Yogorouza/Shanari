@@ -212,6 +212,9 @@ def postTweet():
                 # サイズ超過してれば縮小する
                 if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
                     continue
+                #回転情報を反映
+                with Image.open(imagePath) as im:
+                    rotationImage(im)
                 # pngだったらとりあえずjpgに変換
                 if f.endswith('.png'):
                     with Image.open(imagePath) as im:
@@ -295,3 +298,50 @@ def downloadFile(url, dstPath):
                 localFile.write(data)
     except urllib.error.URLError as e:
         pass
+
+# exif情報に従って画像を回転させる
+def rotationImage(im):
+    # exif情報取得
+    exifTable = {}
+    try:
+        exif = None
+        exif = im._getexif()
+        if exif is not None:
+            for tagId, value in exif.items():
+                tag = TAGS.get(tagId, tagId)
+                exifTable[tag] = value
+        else:
+            return
+    except Exception:
+        return
+    # Orientationが含まれていなければ何もしない
+    if 'Orientation' not in exifTable:
+        return
+    # Orientationに従って回転させる(exif情報は削除する)
+    rotate, reverse = getExifRotation(exifTable['Orientation'])
+    with Image.new(im.mode, im.size) as newIm:
+        newIm.putdata(im.getdata())
+        if reverse == 1:
+            newIm = ImageOps.mirror(newIm)
+        if rotate != 0:
+            newIm = newIm.rotate(rotate, expand=True)
+        newIm.save(im.filename)
+
+# Orientationの回転情報を返す
+def getExifRotation(orientationNum):
+    if orientationNum == 1:
+        return 0, 0
+    if orientationNum == 2:
+        return 0, 1
+    if orientationNum == 3:
+        return 180, 0
+    if orientationNum == 4:
+        return 180, 1
+    if orientationNum == 5:
+        return 270, 1
+    if orientationNum == 6:
+        return 270, 0
+    if orientationNum == 7:
+        return 90, 1
+    if orientationNum == 8:
+        return 90, 0
