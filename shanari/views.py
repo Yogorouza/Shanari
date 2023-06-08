@@ -212,20 +212,10 @@ def postTweet():
                 # サイズ超過してれば縮小する
                 if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
                     continue
-                #回転情報を反映
                 with Image.open(imagePath) as im:
-                    rotationImage(im)
-                # pngだったらとりあえずjpgに変換
-                if f.endswith('.png'):
-                    with Image.open(imagePath) as im:
-                        im = im.convert('RGB')
-                        imagePath = imagePath[:-3]+'jpg'
-                        im.save(imagePath)
-                        os.remove(imagePath[:-3]+'png')
-                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
-                    continue
-                # 指定サイズ未満まで20%ちっこくしていく
-                with Image.open(imagePath) as im:
+                    #回転情報を反映
+                    im = rotationImage(im)
+                    # 指定サイズ未満まで20%ちっこくしていく
                     compressImage(im, imagePath, MAX_FILE_SIZE)
 
             # 認証
@@ -283,6 +273,9 @@ def compressImage(im, outputPath, maxSize):
         size = byteArr.tell()
         if size <= maxSize:
             byteArr.seek(0)
+            os.remove(outputPath)
+            outputPath = os.path.splitext(os.path.basename(outputPath))[0] + '.jpg'
+            outputPath = os.path.join(UPLOAD_FOLDER, outputPath)
             with open(outputPath, 'wb') as f:
                 f.write(byteArr.read())
             return
@@ -311,12 +304,12 @@ def rotationImage(im):
                 tag = TAGS.get(tagId, tagId)
                 exifTable[tag] = value
         else:
-            return
+            return im
     except Exception:
-        return
+        return im
     # Orientationが含まれていなければ何もしない
     if 'Orientation' not in exifTable:
-        return
+        return im
     # Orientationに従って回転させる(exif情報は削除する)
     rotate, reverse = getExifRotation(exifTable['Orientation'])
     with Image.new(im.mode, im.size) as newIm:
@@ -325,7 +318,8 @@ def rotationImage(im):
             newIm = ImageOps.mirror(newIm)
         if rotate != 0:
             newIm = newIm.rotate(rotate, expand=True)
-        newIm.save(im.filename)
+    
+    return newIm
 
 # Orientationの回転情報を返す
 def getExifRotation(orientationNum):
