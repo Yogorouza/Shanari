@@ -1,4 +1,4 @@
-import os, datetime, time
+import os, io, datetime, time
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
 import py_ogp_parser.parser
@@ -199,6 +199,8 @@ def postTweet():
                         ogTitle = result['title']
                         ogImage = result['ogp']['og:image'][0]
                         ogImageFilename = os.path.basename(ogImage)
+                        ogImageFilename = ogImageFilename.split('?')[0]
+                        ogImageFilename = ogImageFilename.split('&')[0]
                         ogDesc = result['ogp']['og:description'][0]
                         # 一旦画像を保存
                         downloadFile(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
@@ -207,23 +209,21 @@ def postTweet():
             MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
             for f in os.listdir(UPLOAD_FOLDER):
                 imagePath = os.path.join(UPLOAD_FOLDER, f)
-                #回転情報を反映
-                with Image.open(imagePath) as im:
-                    rotationImage(im)
-                #サイズ超過かつpngだったらとりあえずjpgに変換
-                if os.path.getsize(imagePath) > MAX_FILE_SIZE and f.endswith('.png'):
+                # サイズ超過してれば縮小する
+                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
+                    continue
+                # pngだったらとりあえずjpgに変換
+                if f.endswith('.png'):
                     with Image.open(imagePath) as im:
                         im = im.convert('RGB')
                         imagePath = imagePath[:-3]+'jpg'
                         im.save(imagePath)
                         os.remove(imagePath[:-3]+'png')
-                #指定サイズ未満まで20%ちっこくしていく
+                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
+                    continue
+                # 指定サイズ未満まで20%ちっこくしていく
                 with Image.open(imagePath) as im:
-                    while os.path.getsize(imagePath) > MAX_FILE_SIZE:
-                        ratio = 0.8 
-                        size = tuple(int(d * ratio) for d in im.size)
-                        im.thumbnail(size)
-                        im.save(imagePath, quality=85, optimize=True)
+                    compressImage(im, imagePath, MAX_FILE_SIZE)
 
             # 認証
             agent = BskyAgent(app.config['BLUESKY_AGENT'])
@@ -267,52 +267,24 @@ def postTweet():
 
     return resultText
 
-# exif情報に従って画像を回転させる
-def rotationImage(im):
-    # exif情報取得
-    exifTable = {}
-    try:
-        exif = None
-        exif = im._getexif()
-        if exif is not None:
-            for tagId, value in exif.items():
-                tag = TAGS.get(tagId, tagId)
-                exifTable[tag] = value
-        else:
+# 指定サイズまで画像ファイルサイズを縮小
+def compressImage(im, outputPath, maxSize):
+    ratio = 0.8
+    while True:
+        width, height = im.size
+        newResolution = (int(width * ratio), int(height * ratio))
+        resizedIm = im.resize(newResolution)
+        # なるたけメモリ上で頑張る
+        byteArr = io.BytesIO()
+        resizedIm.save(byteArr, format='JPEG', quality=70, optimize=True)
+        size = byteArr.tell()
+        if size <= maxSize:
+            byteArr.seek(0)
+            with open(outputPath, 'wb') as f:
+                f.write(byteArr.read())
             return
-    except Exception:
-        return
-    # Orientationが含まれていなければ何もしない
-    if 'Orientation' not in exifTable:
-        return
-    # Orientationに従って回転させる(exif情報は削除する)
-    rotate, reverse = getExifRotation(exifTable['Orientation'])
-    with Image.new(im.mode, im.size) as newIm:
-        newIm.putdata(im.getdata())
-        if reverse == 1:
-            newIm = ImageOps.mirror(newIm)
-        if rotate != 0:
-            newIm = newIm.rotate(rotate, expand=True)
-        newIm.save(im.filename)
-
-# Orientationの回転情報を返す
-def getExifRotation(orientationNum):
-    if orientationNum == 1:
-        return 0, 0
-    if orientationNum == 2:
-        return 0, 1
-    if orientationNum == 3:
-        return 180, 0
-    if orientationNum == 4:
-        return 180, 1
-    if orientationNum == 5:
-        return 270, 1
-    if orientationNum == 6:
-        return 270, 0
-    if orientationNum == 7:
-        return 90, 1
-    if orientationNum == 8:
-        return 90, 0
+        else:
+            im = Image.open(byteArr)
 
 # URL指定されたファイルを保存する
 def downloadFile(url, dstPath):
