@@ -196,9 +196,11 @@ def postTweet():
                     status_code, result = py_ogp_parser.parser.request(urlList[0])
                     if status_code == 200:
                         isLinkcardAttached = True
-                        ogTitle = result['title']
-                        ogDesc = result['ogp']['og:description'][0]
+                        ogTitle = ''
+                        ogDesc = ''
                         try:
+                            ogTitle = result['title']
+                            ogDesc = result['ogp']['og:description'][0]
                             ogImage = result['ogp']['og:image'][0]
                             ogImageFilename = os.path.basename(ogImage)
                             ogImageFilename = ogImageFilename.split('?')[0]
@@ -206,6 +208,9 @@ def postTweet():
                             # 画像を保存
                             saveDownloadImage(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
                         except:
+                            # タイトルが取得出来ていなかったらリンクカードの生成は行わない
+                            if ogTitle is None or ogTitle == '':
+                                isLinkcardAttached = False
                             pass
 
             # 画像ファイルサイズ1MB上限対応
