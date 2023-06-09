@@ -197,13 +197,16 @@ def postTweet():
                     if status_code == 200:
                         isLinkcardAttached = True
                         ogTitle = result['title']
-                        ogImage = result['ogp']['og:image'][0]
-                        ogImageFilename = os.path.basename(ogImage)
-                        ogImageFilename = ogImageFilename.split('?')[0]
-                        ogImageFilename = ogImageFilename.split('&')[0]
                         ogDesc = result['ogp']['og:description'][0]
-                        # 一旦画像を保存
-                        downloadFile(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
+                        try:
+                            ogImage = result['ogp']['og:image'][0]
+                            ogImageFilename = os.path.basename(ogImage)
+                            ogImageFilename = ogImageFilename.split('?')[0]
+                            ogImageFilename = ogImageFilename.split('&')[0]
+                            # 画像を保存
+                            saveDownloadImage(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
+                        except:
+                            pass
 
             # 画像ファイルサイズ1MB上限対応
             MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
@@ -213,8 +216,6 @@ def postTweet():
                 if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
                     continue
                 with Image.open(imagePath) as im:
-                    #回転情報を反映
-                    im = rotationImage(im)
                     # 指定サイズ未満まで20%ちっこくしていく
                     compressImage(im, imagePath, MAX_FILE_SIZE)
 
@@ -267,16 +268,40 @@ def postTweet():
 
 # 指定サイズまで画像ファイルサイズを縮小
 def compressImage(im, outputPath, maxSize):
+    # 回転情報を取得
+    rotate, reverse = getOrientationInfo(im)
+    # 20%ずつ縮小する
     ratio = 0.8
     while True:
+        # 縮小
         width, height = im.size
         newResolution = (int(width * ratio), int(height * ratio))
         resizedIm = im.resize(newResolution)
-        # なるたけメモリ上で頑張る
+        # 縮小結果をメモリに保存
         byteArr = io.BytesIO()
         resizedIm.save(byteArr, format='JPEG', quality=70, optimize=True)
         size = byteArr.tell()
+        # サイズを確認する
         if size <= maxSize:
+            # 指定サイズ以下であれば保存する
+            # 回転の必要があれば適用する
+            if rotate is not None and (reverse == 1 or rotate != 0):
+                with Image.new(resizedIm.mode, resizedIm.size) as newIm:
+                    newIm.putdata(resizedIm.getdata())
+                    if reverse == 1:
+                        newIm = ImageOps.mirror(newIm)
+                    if rotate != 0:
+                        newIm = newIm.rotate(rotate, expand=True)
+                    byteArr = io.BytesIO()
+                    newIm.save(byteArr, format='JPEG', quality=70, optimize=True)
+                    rotate = None
+                # 回転後のサイズを一応チェック
+                size = byteArr.tell()
+                if size > maxSize:
+                    # 超過してたらループ継続
+                    im = Image.open(byteArr)
+                    continue
+            # ファイルに保存する
             byteArr.seek(0)
             os.remove(outputPath)
             outputPath = os.path.splitext(os.path.basename(outputPath))[0] + '.jpg'
@@ -285,20 +310,11 @@ def compressImage(im, outputPath, maxSize):
                 f.write(byteArr.read())
             return
         else:
+            # まだ指定サイズより大きければループ継続
             im = Image.open(byteArr)
 
-# URL指定されたファイルを保存する
-def downloadFile(url, dstPath):
-    try:
-        with urllib.request.urlopen(url) as webFile:
-            data = webFile.read()
-            with open(dstPath, mode='wb') as localFile:
-                localFile.write(data)
-    except urllib.error.URLError as e:
-        pass
-
-# exif情報に従って画像を回転させる
-def rotationImage(im):
+# exif情報にOrientationが含まれていれば画像の回転情報を返す
+def getOrientationInfo(im):
     # exif情報取得
     exifTable = {}
     try:
@@ -309,22 +325,14 @@ def rotationImage(im):
                 tag = TAGS.get(tagId, tagId)
                 exifTable[tag] = value
         else:
-            return im
+            return (None, None)
     except Exception:
-        return im
-    # Orientationが含まれていなければ何もしない
+        return (None, None)
+    # Orientationが含まれていれば画像の回転情報を返す
     if 'Orientation' not in exifTable:
-        return im
-    # Orientationに従って回転させる(exif情報は削除する)
-    rotate, reverse = getExifRotation(exifTable['Orientation'])
-    with Image.new(im.mode, im.size) as newIm:
-        newIm.putdata(im.getdata())
-        if reverse == 1:
-            newIm = ImageOps.mirror(newIm)
-        if rotate != 0:
-            newIm = newIm.rotate(rotate, expand=True)
-    
-    return newIm
+        return (None, None)
+    else:
+        return getExifRotation(exifTable['Orientation'])
 
 # Orientationの回転情報を返す
 def getExifRotation(orientationNum):
@@ -344,3 +352,13 @@ def getExifRotation(orientationNum):
         return 90, 1
     if orientationNum == 8:
         return 90, 0
+
+# URL指定された画像ファイルを保存する
+def saveDownloadImage(url, dstPath):
+    try:
+        with urllib.request.urlopen(url) as webFile:
+            data = webFile.read()
+            with open(dstPath, mode='wb') as localFile:
+                localFile.write(data)
+    except urllib.error.URLError as e:
+        pass
