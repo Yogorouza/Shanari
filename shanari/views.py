@@ -229,9 +229,14 @@ def postTweet():
             # 投稿情報生成
             if isFileAttached == False:
                 # 画像添付なし
-                if isLinkcardAttached == True and len(mediaList) > 0:
+                if isLinkcardAttached == True:
                     # リンクカードあり
-                    external = {"uri": urlList[0], "title": ogTitle, "description": ogDesc, "thumb": mediaList[0]['image']}
+                    if len(mediaList) > 0:
+                        # 画像あり
+                        external = {"uri": urlList[0], "title": ogTitle, "description": ogDesc, "thumb": mediaList[0]['image']}
+                    else:
+                        # 画像なし
+                        external = {"uri": urlList[0], "title": ogTitle, "description": ogDesc}
                     embed = {"$type": "app.bsky.embed.external", "external": external}
                     record = {"text": postText, "embed": embed}
                 else:
