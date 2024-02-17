@@ -21,6 +21,8 @@
 
 <body onload="initialize()">
     <form id="uploadForm" class="upload-form">
+        <hidden id="lat"></hidden>
+        <hidden id="lng"></hidden>
         <div class="parent">
             <div class="gridChk"> <!-- 送信先選択ボタン -->
                 <div class="twitterArea" id="makeImg">
@@ -48,213 +50,37 @@
             <div class="gridBtn"> <!-- POST, CLEARボタン / 結果テキスト -->
                 <button id="sendButton" type="button" onclick="postTweet()">POST</button>
                 <button id="clearButton" type="reset" onclick="initialize()">CLEAR</button>
+            </div>
+            <div class="gridImgBtn"> <!-- 4sq,画像添付ボタン -->
+                <div class="button4sq"></div>
+                <input type="file" id="files" name="pics" multiple onChange="storePics(event)" class="custom-file-upload">
+                <label for="files"><span class="material-symbols-outlined bigsize">add_photo_alternate</span></label>
+            </div>
+            <div class="gridLog"> <!-- ログメッセージ -->
                 <div class="resultText">
                     <p id="spinner" class="spinner"></p><p id="resultMsg"></p>
                 </div>
             </div>
-            <div class="gridImgBtn"> <!-- 画像添付ボタン -->
-                <input type="file" id="files" name="pics" multiple onChange="storePics(event)" class="custom-file-upload">
-                <label for="files"><span class="material-symbols-outlined bigsize">add_photo_alternate</span></label>
-            </div>
             <div class="gridImg"> <!-- 添付画像プレビュー欄 -->
                 <div id="previewArea"></div>
-            </div>
-            <div class="gridLog"> <!-- ログメッセージ -->
             </div>
         </div>
     </form>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-
-    <script type="text/javascript">
-        var picCnt = 0;
-
-        // eventからクリップボードのアイテムを取り出し送信する
-        document.onpaste = function (event) {
-            let items = (event.clipboardData || event.originalEvent.clipboardData).items;
-            for (let i = 0; i < items.length; i++) {
-                let item = items[i];
-                // 画像だけ
-                if (item.type.indexOf('image') != -1) {
-                    // 4件以上追加できない
-                    if (picCnt++ >= 4) return;
-                    // プレビュー表示して送信
-                    let file = item.getAsFile();
-                    imgPreview(file);
-                    let formData = new FormData();
-                    formData.append('pics', file);
-                    postImg(formData);
-                }
-            }
-        }
-
-        // ドラッグドロップされたファイルを取り出し送信する
-        document.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-        });
-        document.addEventListener('drop', function(e) {
-            e.preventDefault();
-            let formData = new FormData();
-            for (let file of e.dataTransfer.files) {
-                // 画像だけ
-                if (file.type.indexOf('image') < 0) continue;
-                // 4件以上追加できない
-                if (picCnt++ >= 4) break;
-                // プレビュー表示して送信用のformDataに追加する
-                imgPreview(file);
-                formData.append('pics', file);
-            }
-            //送信
-            postImg(formData);
-        });
-
-        // アップロード指定されたファイルを送信する
-        function storePics(event) {
-            let formData = new FormData();
-            for (let file of event.target.files) {
-                // 画像だけ
-                if (file.type.indexOf('image') < 0) continue;
-                // 4件以上追加できない
-                if (picCnt++ >= 4) break;
-                // プレビュー表示して送信用のformDataに追加する
-                imgPreview(file);
-                formData.append('pics', file);
-            }
-            //送信
-            postImg(formData);
-        }
-
-        // ファイルのプレビューを表示
-        function imgPreview(file) {
-            let preview = document.getElementById('previewArea');
-            let reader = new FileReader();
-            reader.onload = function (event) {
-                let img = document.createElement('img');
-                img.setAttribute('src', reader.result);
-                img.setAttribute('id', 'previewImage-previewArea');
-                img.setAttribute('class', 'tmp');
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        // プレビュー画像がタップされたら添付ファイルを初期化する
-        document.getElementById('previewArea').addEventListener('click', function(e) {
-            removeImg();
-        });
-
-        // 画像をサーバに送信する
-        function postImg(formData) {
-            $.ajax({
-                url: '/uploadImg',
-                type: 'post',
-                data: formData,
-                dataType: 'text',
-                processData: false,
-                contentType: false,
-                timeout: 10000
-            }).always(function(receivedData) {
-                let resultMsg = receivedData;
-                resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-                $('#resultMsg').html(resultMsg);
-            });
-        };
-
-        // 添付ファイルを初期化する
-        function removeImg() {
-            // サーバの画像フォルダを初期化する
-            let formData = new FormData();
-            $.ajax({
-                url: '/clearImg',
-                type: 'post',
-                data: formData,
-                dataType: 'text',
-                processData: false,
-                contentType: false,
-                timeout: 10000
-            }).always(function(receivedData) {
-                let resultMsg = receivedData;
-                resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-                $('#resultMsg').html(resultMsg);
-            });
-            // プレビューを初期化する
-            picCnt = 0;
-            let preview = document.getElementById('previewArea');
-            while (preview.firstChild) {
-                preview.removeChild(preview.firstChild);
-            }
-        }
-
-        // 機能を初期状態に戻す
-        function initialize() {
-            removeImg();
-            clearForm();
-        }
-
-        // formを初期状態に戻す
-        function clearForm() {
-            picCnt = 0;
-            let preview = document.getElementById('previewArea');
-            while (preview.firstChild) {
-                preview.removeChild(preview.firstChild);
-            }
-            $('#word-count').text('0 / 280');
-            document.forms['uploadForm'].reset();
-        }
-
-        // 画像以外のform情報を送信(投稿実行)
-        function postTweet() {
-            $('#resultMsg').html('processing...');
-            $('#sendButton').prop('disabled',true);
-            $('#clearButton').prop('disabled',true);
-            $('#files').prop('disabled',true);
-            document.getElementById('spinner').style.display = 'block';
-            let form = $('#uploadForm').get()[0];
-            let formData = new FormData(form);
-            let receivedData = ''
-            $.ajax({
-                url: '/postTweet',
-                type: 'post',
-                data: formData,
-                dataType: 'text',
-                processData: false,
-                contentType: false,
-                timeout: 30000
-            }).done(function(receivedData) {
-                resultMsg = receivedData;
-                new Promise((resolve) => {
-                    if(resultMsg.indexOf('ERROR') == -1){
-                        clearForm();
-                    }
-                    resolve();
-                }).then(() => {
-                    document.getElementById('spinner').style.display = 'none';
-                    resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-                    $('#resultMsg').html(resultMsg);
-                    $('#sendButton').prop('disabled',false);
-                    $('#clearButton').prop('disabled',false);
-                    $('#files').prop('disabled',false);
-                });
-            });
-        }
-
-        // textareaの文字数カウント
-        $(function () {
-            $('textarea').keyup(function () {
-                let str = $(this).val();
-                let len = 0;
-                for (let i = 0; i < str.length; i++) {
-                    let c = str.charCodeAt(i);
-                    if ((c >= 0x0 && c < 0x81) || (c == 0xf8f0) || (c >= 0xff61 && c < 0xffa0) || (c >= 0xf8f1 && c < 0xf8f4))
-                        len += 1;
-                    else
-                        len += 2;
-                }
-                $('#word-count').text(len + ' / 280');
-            });
-        });
-    </script>
+    <div class="bottom-sheet">
+        <div class="sheet-overlay"></div>
+        <div class="content">
+            <div class="header">
+                <div class="drag-icon"><span></span></div>
+            </div>
+            <div class="body" id="bottomSheetContent">
+            </div>
+        </div>
+    </div>
+  
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+    <script src="/static/js/shanari.js"></script>
 </body>
 
 </html>

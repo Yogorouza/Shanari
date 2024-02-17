@@ -1,4 +1,4 @@
-import os, io, datetime, time
+import os, io, datetime, time, requests
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
 import py_ogp_parser.parser
@@ -271,6 +271,24 @@ def postTweet():
 
     return resultText
 
+
+# --- 4sq周辺情報取得 ---
+@app.route('/get4sqVenues', methods=['POST'])
+@flask_login.login_required
+def get4sqVenues():
+    lat = request.form.get('lat', '')
+    lng = request.form.get('lng', '')
+    venues = get_venues(lat, lng)
+    return venues
+
+# --- 4sqチェックイン ---
+@app.route('/chkin4sqVenue', methods=['POST'])
+@flask_login.login_required
+def chkin4sqVenue():
+    venueid = request.form.get('venueid', '')
+    resultText = chkin_venues(venueid)
+    return resultText
+
 # 指定サイズまで画像ファイルサイズを縮小
 def compressImage(im, outputPath, maxSize):
     # 回転情報を取得
@@ -367,3 +385,40 @@ def saveDownloadImage(url, dstPath):
                 localFile.write(data)
     except urllib.error.URLError as e:
         pass
+
+# Foursquare APIより周辺施設を取得
+def get_venues(lat, lng, radius=500, limit=50):
+    url = 'https://api.foursquare.com/v3/places/search'
+    api_key = app.config['4SQ_PLACES_API_KEY']
+    headers = {
+        'Authorization': api_key
+    }
+    params = {
+        'll': f'{lat},{lng}',
+        'radius': radius,
+        'limit': limit,
+        'sort':'DISTANCE',
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json()['results']
+    else:
+        errText = f"<b>4sq[ERROR]</b>Failed to retrieve venues: {response.status_code}, {response.text}"
+        return {'errText': errText}
+
+# Foursquare APIにてチェックイン実行
+def chkin_venues(venueid):
+    url = 'https://api.foursquare.com/v2/checkins/add'
+    access_token = app.config['4SQ_ACCESS_TOKEN']
+    params = {
+        'oauth_token': access_token,
+        'venueId': venueid,
+        'broadcast': 'broadcast',
+        'v': '20230401',
+    }
+    response = requests.post(url, params=params)
+    if response.status_code == 200:
+        return '<b>4sq:</b>Check-in Succeed.'
+    else:
+        errText = f"<b>4sq[ERROR]</b>Failed to Check-in: {response.status_code}, {response.text}"
+        return errText
