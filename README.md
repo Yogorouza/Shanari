@@ -5,9 +5,13 @@ Twitter, Misskey, Blueskyにクロスポストを行うアプリケーション
 ## 必要なもの
 
 - Python 3.10
+
+## 使うサービスに応じて用意するもの
+
 - TwitterのConsumer KeysとAuthentication Tokens(FreeでOK)
 - Misskeyのアクセストークン
 - BlueskyのIDとパスワード
+- Foursquare APIのPlaces API KeysとAccess Token
 
 ## セットアップ手順
 
@@ -59,6 +63,10 @@ export FLASK_BLUESKY_AGENT='https://bsky.social'
 export FLASK_BLUESKY_ID='xxxxxx.bsky.social'
 export FLASK_BLUESKY_PASS=''
 export FLASK_BLUESKY_MAX_FILE_SIZE=1000000
+
+#Foursquare
+export FLASK_4SQ_PLACES_API_KEY=''
+export FLASK_4SQ_ACCESS_TOKEN=''
 ```
 
 5. 環境変数を仮想環境に反映
@@ -95,12 +103,16 @@ gunicorn --workers 5 --bind 0.0.0.0:443 shanari.webapp:app --certfile fullchain.
 - テキストエリアに投稿内容を記述(各SNSの最大文字数は考慮せずそのまま流します)  
 - POSTをタップして投稿(投稿が終わると結果がボタンの下に表示されるかも)  
 - CLEARをタップして画面を初期化  
+- Foursquareボタンをタップして近所の施設を左スワイプでチェックイン
+- チェックイン後に投稿欄に施設情報が編集されるので必要に応じてテキストや画像を追加して投稿
 - 要件を満たしていればiOSでホーム画面に追加するとPWAぽく動作する(ようです)  
-![sample1](https://github.com/Yogorouza/Shanari/assets/31218595/064973e3-5dc7-4895-9617-e09995fcbc19)
+![image](https://github.com/Yogorouza/Shanari/assets/31218595/b1c28dd8-e2b6-48d2-8cc9-326d2c4d57fd)
+![image](https://github.com/Yogorouza/Shanari/assets/31218595/fb2d8a52-a0d7-4361-b137-c9d602a98500)
 - 同じく要件を満たしていればPC版chromeでアプリショートカット化が出来る(ようです)
-![sample2](https://github.com/Yogorouza/Shanari/assets/31218595/741db2e1-a7a9-4dec-acb8-ec224568762a)
+![image](https://github.com/Yogorouza/Shanari/assets/31218595/b4154764-662d-48d6-aba7-703342226611)
 
 ## 注意点
+- iOSでFoursquareボタンをタップしても何も起きない場合は「設定」->「一般」->「リセット」->「位置情報とプライバシーをリセット」とかすると位置情報ダイアログが表示される(と思う)ので許可を選択してください(リセット操作なのでくれぐれも自己責任で…)
 - 素人の仕事ですので拙い点はご容赦を
 - (念のため)__Twitterについては利用者本人がセットアップしたAPIを同じく本人が立てたサーバで本人が使っているので大丈夫だとは思いますが今のTwitterでは何が起きるか分かりませんので各自の判断に基づいて利用してください__
 
