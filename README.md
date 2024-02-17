@@ -119,8 +119,8 @@ gunicorn --workers 5 --bind 0.0.0.0:443 shanari.webapp:app --certfile fullchain.
 - (念のため)Twitterについては利用者本人がセットアップしたAPIを同じく本人が立てたサーバで本人が使っているので大丈夫だとは思いますが今のTwitterでは何が起きるか分かりませんので各自の判断に基づいて利用してください
 
 ## 作者
-Bluesky: @yunoji.bsky.social
-Twitter: @Yunoji
+Bluesky: @yunoji.bsky.social  
+Twitter: @Yunoji  
 .NET開発者、芸歴20余年で今時のオープンソース開発の知識が乏し過ぎることに今さら気付いて手を動かしてみたらしい。  
 
 ## License
