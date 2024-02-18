@@ -1,4 +1,4 @@
-import os, io, datetime, time, requests
+import os, io, datetime, time, requests, tempfile
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
 import py_ogp_parser.parser
@@ -11,14 +11,11 @@ from PIL import Image, ImageOps
 from PIL.ExifTags import TAGS
 from urlextract import URLExtract
 
-# --- 作業フォルダが存在しない場合は掘る ---
-def create_work_dir():
-    work_dir = app.config['UPLOAD_FOLDER']
-    if not os.path.exists(work_dir):
-        os.makedirs(work_dir)
-
-create_work_dir()
-UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
+# --- 作業フォルダを掘る ---
+temp_dir = tempfile.gettempdir()
+UPLOAD_FOLDER = temp_dir + '/shanariwk'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # --- ログインマネージャ・認証関連 ---
 login_manager = flask_login.LoginManager()
