@@ -11,6 +11,13 @@ from PIL import Image, ImageOps
 from PIL.ExifTags import TAGS
 from urlextract import URLExtract
 
+# --- 作業フォルダが存在しない場合は掘る ---
+def create_work_dir():
+    work_dir = app.config['UPLOAD_FOLDER']
+    if not os.path.exists(work_dir):
+        os.makedirs(work_dir)
+
+create_work_dir()
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 
 # --- ログインマネージャ・認証関連 ---
