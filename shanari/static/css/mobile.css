@@ -3,7 +3,7 @@
     padding: 0;
 }
 body{
-    background-color: rgb(255, 251, 233);
+    background-color: #fffbe9;
     font-family:sans-serif;
 }
 p{
@@ -16,16 +16,13 @@ p{
     grid-column-gap: 5px;
     grid-row-gap: 0px;
     grid-template-areas: 
-    "gridChk      gridChk      gridChk      gridTitle   "
+    "gridChk      gridChk      gridChk      gridChk   "
     "gridTextarea gridTextarea gridTextarea gridTextarea"
     "gridBtn      gridBtn      gridBtn      gridBtn     "
     "gridLog      gridLog      gridLog      gridLog     "
     "gridImg      gridImg      gridImg      gridImg     ";
 }
 .gridChk      {grid-area: gridChk; display: flex; justify-content: flex-start; }
-.gridTitle    {grid-area: gridTitle; text-align: right; vertical-align: middle; padding-right: 10px;
-                font-size: 20px; font-family: 'Montserrat', sans-serif; color: rgb(224, 211, 157);
-}
 .gridTextarea {grid-area: gridTextarea;}
 .gridBtn      {grid-area: gridBtn; vertical-align: top;}
 .gridImg      {grid-area: gridImg;}

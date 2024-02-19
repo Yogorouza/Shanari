@@ -97,6 +97,7 @@ function postImg(formData) {
 function removeImg() {
     // サーバの画像フォルダを初期化する
     let formData = new FormData();
+    $('#resultMsg').html('');
     $.ajax({
         url: '/clearImg',
         type: 'post',
@@ -108,7 +109,6 @@ function removeImg() {
     }).always(function(receivedData) {
         let resultMsg = receivedData;
         resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-        $('#resultMsg').html(resultMsg);
     });
     // プレビューを初期化する
     picCnt = 0;
@@ -122,6 +122,7 @@ function removeImg() {
 function initialize() {
     removeImg();
     clearForm();
+    $('#resultMsg').text('Shanari: Initialized.');
 }
 
 // formを初期状態に戻す
