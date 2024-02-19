@@ -1,8 +1,8 @@
 {
   "name": "Shanari",
   "short_name": "Shanari",
-  "theme_color": "#f6ecc2",
-  "background_color": "#f6ecc2",
+  "theme_color": "#fffbe9",
+  "background_color": "#fffbe9",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
