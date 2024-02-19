@@ -44,9 +44,6 @@ export FLASK_SECRET_KEY='ac6adf3964047db6'
 export FLASK_LOGIN_ID='user'
 export FLASK_LOGIN_PASSWORD='pass'
 
-#画像ファイルアップロード用一時フォルダ(ローカルパス)
-export FLASK_UPLOAD_FOLDER='./imgtemp'
-
 #Twitter
 export FLASK_TWITTER_BEARAR_TOKEN=''
 export FLASK_TWITTER_CONSUMER_KEY=''
@@ -74,14 +71,7 @@ export FLASK_4SQ_ACCESS_TOKEN=''
 source mysettings
 ```
 
-6. 画像ファイルアップロード用一時フォルダを作成  
-`mysettings`に記入したフォルダを作成してください。  
-初期値そのままであれば下記の通りです。  
-```
-mkdir imgtemp
-```
-
-7. アプリケーションを実行
+6. アプリケーションを実行
 ```
 flask run
 ```
