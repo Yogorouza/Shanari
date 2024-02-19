@@ -131,7 +131,6 @@ function clearForm() {
     while (preview.firstChild) {
         preview.removeChild(preview.firstChild);
     }
-    $('#word-count').text('0 / 280');
     document.forms['uploadForm'].reset();
 }
 
@@ -183,7 +182,7 @@ $(function () {
             else
                 len += 2;
         }
-        $('#word-count').text(len + ' / 280');
+        $('#resultMsg').text(len + ' / 280');
     });
 });
 
@@ -291,7 +290,7 @@ async function genBottomSheetContents() {
 }
 
   // ボトムシート動作定義
-const showModalBtn = document.querySelector(".button4sq");
+const showModalBtn = document.querySelector(".buttonMap");
 const bottomSheet = document.querySelector(".bottom-sheet");
 const sheetOverlay = bottomSheet.querySelector(".sheet-overlay");
 const sheetContent = bottomSheet.querySelector(".content");

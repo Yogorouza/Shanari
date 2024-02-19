@@ -11,7 +11,6 @@
     <link type="image/png" sizes="180x180" rel="icon" href="/static/images/icon-180x180.png">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/mobile.css" media="screen and (max-width:480px)">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script>      
         if (navigator.serviceWorker) {
           navigator.serviceWorker.register ('/static/service-worker.js')
@@ -23,38 +22,37 @@
     <form id="uploadForm" class="upload-form">
         <div class="parent">
             <div class="gridChk"> <!-- 送信先選択ボタン -->
-                <div class="twitterArea" id="makeImg">
+                <label for="twitterCheck" class="chk_label">
                     <input type="checkbox" id="twitterCheck" name="twitterCheck" checked="">
-                    <label for="twitterCheck"><span></span></label>
-                </div>
-                <div class="misskeyArea" id="makeImg">
+                    <span class="checkmark">✔</span>
+                    Twitter
+                </label>
+                <label for="misskeyCheck" class="chk_label">
                     <input type="checkbox" id="misskeyCheck" name="misskeyCheck" checked="">
-                    <label for="misskeyCheck"><span></span></label>
-                </div>
-                <div class="blueskyArea" id="makeImg">
+                    <span class="checkmark">✔</span>
+                    Misskey
+                </label>
+                <label for="blueskyCheck" class="chk_label">
                     <input type="checkbox" id="blueskyCheck" name="blueskyCheck" checked="">
-                    <label for="blueskyCheck"><span></span></label>
-                </div>
+                    <span class="checkmark">✔</span>
+                    Bluesky
+                </label>
             </div>
             <div class="gridTitle"> <!-- ソフトウェア名 -->
                 Shanari
             </div>
-            <div class="gridWordCt"> <!-- 入力済文字数 -->
-                <p id="word-count">0 / 280</p>
-            </div>
             <div class="gridTextarea"> <!-- 投稿テキスト欄 -->
                 <textarea id="postText" name="postText"></textarea>
             </div>
-            <div class="gridBtn"> <!-- POST, CLEARボタン / 結果テキスト -->
-                <button id="sendButton" type="button" onclick="postTweet()">POST</button>
-                <button id="clearButton" type="reset" onclick="initialize()">CLEAR</button>
+            <div class="gridBtn"> <!-- ボタン -->
+                <button id="sendButton" type="button" class="buttonPost" onclick="postTweet()">POST</button>
+                <button id="clearButton" type="reset" class="buttonClear" onclick="initialize()">CLEAR</button>
+                <label for="files" class="buttonPic"></label>
+                <input type="file" id="files" name="pics" multiple onChange="storePics(event)" style="display: none;"/>
+                <label for="buttonMap" class="buttonMap"></label>
+                <input type="button" id="buttonMap" style="display: none;"/>
             </div>
-            <div class="gridImgBtn"> <!-- 4sq,画像添付ボタン -->
-                <div class="button4sq"></div>
-                <input type="file" id="files" name="pics" multiple onChange="storePics(event)" class="custom-file-upload">
-                <label for="files"><span class="material-symbols-outlined bigsize">add_photo_alternate</span></label>
-            </div>
-            <div class="gridLog"> <!-- ログメッセージ -->
+            <div class="gridLog"> <!-- ログメッセージ, 入力済文字数 -->
                 <div class="resultText">
                     <p id="spinner" class="spinner"></p><p id="resultMsg"></p>
                 </div>
