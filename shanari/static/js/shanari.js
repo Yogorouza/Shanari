@@ -187,6 +187,29 @@ $(function () {
     });
 });
 
+// チェックボックスの外観補助
+document.getElementById('twitterCheck').addEventListener('change', function() {
+    let el = this.nextElementSibling;
+    while (el) {
+      el.style.opacity = this.checked ? "1" : "0.2";
+      el = el.nextElementSibling;
+    }
+});
+document.getElementById('misskeyCheck').addEventListener('change', function() {
+    let el = this.nextElementSibling;
+    while (el) {
+      el.style.opacity = this.checked ? "1" : "0.2";
+      el = el.nextElementSibling;
+    }
+});
+document.getElementById('blueskyCheck').addEventListener('change', function() {
+    let el = this.nextElementSibling;
+    while (el) {
+      el.style.opacity = this.checked ? "1" : "0.2";
+      el = el.nextElementSibling;
+    }
+});
+
 // 位置情報取得
 function getCurrentPositionPromise(options = {}) {
     return new Promise((resolve, reject) => {

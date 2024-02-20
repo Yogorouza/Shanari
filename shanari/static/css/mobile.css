@@ -160,11 +160,11 @@ textarea {
     padding-left: 15px;
     padding-right: 15px;
     background-color: #ddd;
-    color: #c1c1c1;
+    color: #c18c19;
     cursor: pointer;
     margin: 3px;
     border-radius: 15px;
-    font-size: 13px;
+    font-size: 14px;
     transition: background-color 0.3s ease;
     position: relative;
     box-shadow: 1px 2px 1px rgba(0, 0, 0, 0.03);
@@ -172,17 +172,25 @@ textarea {
 .chk_label input[type="checkbox"] {
     display: none;
 }
-.chk_label .checkmark {
-    display: inline;
-    margin-right: 5px;
-    color: transparent;
-}
-.chk_label input[type="checkbox"]:checked + .checkmark {
-    color: #13b913;
-}
 .chk_label:has(input[type="checkbox"]:checked) {
     background-color: #ffe8b7;
-    color: #c18c19;
+}
+.checkmark {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: opacity 0.3s ease;
+    opacity: 1;
+}
+.label-icon {
+    height: 12px;
+    width: auto;
+    border: none;
+    margin: 0px;
+    margin-right: 5px;
+    padding-top: 8px;
+    box-shadow: none; 
 }
 
 /*=BottomSheet===============================================*/
