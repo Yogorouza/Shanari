@@ -4,7 +4,7 @@ Twitter, Misskey, Blueskyにクロスポストを行うアプリケーション
 
 ## 必要なもの
 
-- Python 3.10
+- Python 3.10 もしくは Google App Engine
 
 ## 使うサービスに応じて用意するもの
 
@@ -13,7 +13,24 @@ Twitter, Misskey, Blueskyにクロスポストを行うアプリケーション
 - BlueskyのIDとパスワード
 - Foursquare APIのPlaces API KeysとAccess Token
 
-## セットアップ手順
+## Google App Engineで動作させる場合
+
+1. 任意の場所にリポジトリをクローン
+```
+git clone https://github.com/Yogorouza/Shanari.git
+cd Shanari
+```
+
+2. 環境変数を記入  
+`app.yaml.sample`を`app.yaml`にリネームして記載されている各設定値をご自身の環境に基づいて記入してください。  
+使用しないSNSの設定は空欄のままでOKです。(投稿時にそのSNSをOFFにしてください)
+
+3. プロジェクトにデプロイ
+```
+gcloud app deploy
+```
+
+## GAE以外のセットアップ手順
 
 1. リポジトリをクローン
 ```
@@ -34,7 +51,7 @@ pip install -r requirements.txt
 
 4. 環境変数を記入  
 `mysettings`に記載されている各設定値をご自身の環境に基づいて記入してください。  
-使用しないSNSの設定は空欄のままでOKです(投稿時にそのSNSをOFFにしてください)
+使用しないSNSの設定は空欄のままでOKです。(投稿時にそのSNSをOFFにしてください)
 ```
 #FLASKアプリケーション定義
 export FLASK_APP=shanari.webapp
@@ -93,16 +110,16 @@ gunicorn --workers 5 --bind 0.0.0.0:443 shanari.webapp:app --certfile fullchain.
 - テキストエリアに投稿内容を記述(各SNSの最大文字数は考慮せずそのまま流します)  
 - POSTをタップして投稿(投稿が終わると結果がボタンの下に表示されるかも)  
 - CLEARをタップして画面を初期化  
-- Foursquareボタンをタップして近所の施設を左スワイプでチェックイン
+- ピンボタンをタップして近所の施設を左スワイプでFoursquareにチェックイン
 - チェックイン後に投稿欄に施設情報が編集されるので必要に応じてテキストや画像を追加して投稿
 - 要件を満たしていればiOSでホーム画面に追加するとPWAぽく動作する(ようです)  
-![image](https://github.com/Yogorouza/Shanari/assets/31218595/b1c28dd8-e2b6-48d2-8cc9-326d2c4d57fd)
-![image](https://github.com/Yogorouza/Shanari/assets/31218595/fb2d8a52-a0d7-4361-b137-c9d602a98500)
-- 同じく要件を満たしていればPC版chromeでアプリショートカット化が出来る(ようです)
-![image](https://github.com/Yogorouza/Shanari/assets/31218595/b4154764-662d-48d6-aba7-703342226611)
+- 同じく要件を満たしていればPC版chromeでアプリショートカット化が出来る(ようです)   
+- こんな感じの見た目です   
+![image](https://github.com/Yogorouza/Shanari/assets/31218595/8b11df11-e5bf-4057-a432-f2e2565d2a0f)
+![image](https://github.com/Yogorouza/Shanari/assets/31218595/54aa60fd-7d9c-4ca8-a5c1-8661ce6f3b2f)
 
 ## 注意点
-- iOSのPWAでFoursquareボタンをタップしても何も起きない≒位置情報アラートが開かない場合はそのままSafariを開くとSafari側でアラートが表示されることがあるっぽい
+- iOSのPWAでピンボタンをタップしても何も起きない≒位置情報アラートが開かない場合はそのままSafariを開くとSafari側でアラートが表示されることがあるっぽい
 - もしくはSafariの位置情報設定を触ってみる
 - 如何ともしがたい場合は「設定」->「一般」->「リセット」->「位置情報とプライバシーをリセット」とかすると位置情報ダイアログが表示されるようになる(と思う)ので許可を選択(リセット操作なのでくれぐれも自己責任で…)
 - 素人の仕事ですので拙い点はご容赦を
