@@ -43,7 +43,6 @@ document.addEventListener('drop', function(e) {
 
 // アップロード指定されたファイルを送信する
 function storePics(event) {
-    let formData = new FormData();
     for (let file of event.target.files) {
         // 画像だけ
         if (file.type.indexOf('image') < 0) continue;
@@ -51,10 +50,11 @@ function storePics(event) {
         if (picCnt++ >= 4) break;
         // プレビュー表示して送信用のformDataに追加する
         imgPreview(file);
+        let formData = new FormData();
         formData.append('pics', file);
+        //送信
+        postImg(formData);
     }
-    //送信
-    postImg(formData);
 }
 
 // ファイルのプレビューを表示
