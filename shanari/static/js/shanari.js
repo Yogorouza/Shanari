@@ -220,13 +220,13 @@ function getCurrentPositionPromise(options = {}) {
 // ボトムシートの内訳生成
 async function genBottomSheetContents() {
     try {
-        // 4sqAPI経由で周辺施設を取得
+        // Google Places API経由で周辺施設を取得
         let position = await getCurrentPositionPromise();
         let formData = new FormData();
         formData.append('lat', position.coords.latitude);
         formData.append('lng', position.coords.longitude);
         $.ajax({
-            url: '/get4sqVenues',
+            url: '/getNearby',
             type: 'post',
             data: formData,
             dataType: 'json',
@@ -241,16 +241,20 @@ async function genBottomSheetContents() {
             }
             // 施設の取得に成功したら一覧生成
             let listSrc = '';
-            listSrc = '<div class="instructions">左スワイプでチェックインします</div>';
+            listSrc = '<div class="instructions">左スワイプで本文に入れます</div>';
             listSrc += '<ul class="list-container" id="itemList">';
             receivedData.forEach(item => {
-                listSrc += '<li class="list-item" data-id="' + `${item.fsq_id}` + '">';
-                listSrc += '<span class="list-item-name">' + `${item.name}` + '</span>';
-                listSrc += '<span class="list-item-distance">' + `${item.distance}` + 'm</span>';
+               let pref = item.addressComponents
+                    .filter(component => component.types.includes('administrative_area_level_1'))
+                    .map(component => component.shortText);
+                let addr = pref + item.addressComponents
+                    .filter(component => component.types.includes('locality'))
+                    .map(component => component.shortText);
+                listSrc += '<li class="list-item" url="' + `${item.googleMapsUri}` + '" addr="' + `${addr}` + '">';
+                listSrc += '<span class="list-item-name">' + `${item.displayName.text}` + '</span>';
                 listSrc += '</li>';
             });
             listSrc += '</ul>';
-            listSrc += '<div class="notice">このアプリケーションは、Foursquare® アプリケーションのプログラミングインターフェースを使用しておりますが、Foursquare Labs, Inc. によって承認または認定されているわけではございません。<br />本アプリケーションに表示されているすべての Foursquare® ロゴ(すべてのバッジを含む)と登録商標は、Foursquare Labs, Inc. に帰属します。<br /></div>';
             bottomSheetContent.innerHTML = listSrc;
             // スワイプイベントをli要素に割り当てる
             let listItems = document.querySelectorAll('.list-item');
@@ -274,26 +278,11 @@ async function genBottomSheetContents() {
                         if (Math.abs(e.deltaX) > halfWidth) {
                             // 投稿用テキストを生成
                             let textarea = document.getElementById('postText');
-                            let venueId = item.getAttribute('data-id');
-                            let venueName = item.querySelector('.list-item-name').textContent;
-                            let venueText = "I'm at " + venueName + '\r\nhttps://foursquare.com/v/' + venueId;
-                            textarea.value = venueText;
-                            // 4qsにチェックインを送信
-                            let formDataChkin = new FormData();
-                            formDataChkin.append('venueid', venueId);
-                            $.ajax({
-                                url: '/chkin4sqVenue',
-                                type: 'post',
-                                data: formDataChkin,
-                                dataType: 'text',
-                                processData: false,
-                                contentType: false,
-                                timeout: 10000
-                            }).always(function(receivedData) {
-                                let resultMsg = receivedData;
-                                resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-                                $('#resultMsg').html(resultMsg);
-                            });
+                            let nearbyUrl = item.getAttribute('url');
+                            let nearbyAddr = item.getAttribute('addr');
+                            let nearbyName = item.querySelector('.list-item-name').textContent + '(' + nearbyAddr + ')';
+                            let nearbyText = "I'm at " + nearbyName + '\r\n' + nearbyUrl;
+                            textarea.value = nearbyText;
                             // ボトムテキストを閉じる
                             bottomSheet.classList.remove("show");
                             document.body.style.overflowY = "auto";

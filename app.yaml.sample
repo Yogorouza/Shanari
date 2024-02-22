@@ -27,9 +27,8 @@ env_variables:
   FLASK_BLUESKY_PASS: ''
   FLASK_BLUESKY_MAX_FILE_SIZE: 1000000
 
-  #Foursquare
-  FLASK_4SQ_PLACES_API_KEY: ''
-  FLASK_4SQ_ACCESS_TOKEN: ''
+  #Google Places API
+  FLASK_GOOGLE_PLACES_API_KEY: ''
 
 automatic_scaling:
   max_instances: 1

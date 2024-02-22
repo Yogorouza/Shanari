@@ -1,4 +1,4 @@
-import os, io, datetime, time, requests, tempfile
+import os, io, datetime, time, requests, tempfile, json
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
 import py_ogp_parser.parser
@@ -276,22 +276,14 @@ def postTweet():
     return resultText
 
 
-# --- 4sq周辺情報取得 ---
-@app.route('/get4sqVenues', methods=['POST'])
+# --- Google Placesより周辺情報取得 ---
+@app.route('/getNearby', methods=['POST'])
 @flask_login.login_required
-def get4sqVenues():
+def getNearby():
     lat = request.form.get('lat', '')
     lng = request.form.get('lng', '')
-    venues = get_venues(lat, lng)
-    return venues
-
-# --- 4sqチェックイン ---
-@app.route('/chkin4sqVenue', methods=['POST'])
-@flask_login.login_required
-def chkin4sqVenue():
-    venueid = request.form.get('venueid', '')
-    resultText = chkin_venues(venueid)
-    return resultText
+    nearby = get_nearby(lat, lng)
+    return nearby
 
 # 指定サイズまで画像ファイルサイズを縮小
 def compressImage(im, outputPath, maxSize):
@@ -390,39 +382,28 @@ def saveDownloadImage(url, dstPath):
     except urllib.error.URLError as e:
         pass
 
-# Foursquare APIより周辺施設を取得
-def get_venues(lat, lng, radius=500, limit=50):
-    url = 'https://api.foursquare.com/v3/places/search'
-    api_key = app.config['4SQ_PLACES_API_KEY']
+# Google Places APIより周辺施設を取得
+def get_nearby(lat, lng, radius=300, limit=20):
+    url = 'https://places.googleapis.com/v1/places:searchNearby'
+    api_key = app.config['GOOGLE_PLACES_API_KEY']
     headers = {
-        'Authorization': api_key
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': api_key,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.googleMapsUri',
     }
     params = {
-        'll': f'{lat},{lng}',
-        'radius': radius,
-        'limit': limit,
-        'sort':'DISTANCE',
+        'maxResultCount': limit,
+        'languageCode': 'ja',
+        'locationRestriction': {
+            'circle': {
+                'center': {'latitude': f'{lat}', 'longitude': f'{lng}'},
+                'radius': radius
+            }
+        }
     }
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.post(url, headers=headers, data=json.dumps(params))
     if response.status_code == 200:
-        return response.json()['results']
+        return response.json()['places']
     else:
-        errText = f"<b>4sq[ERROR]</b>Failed to retrieve venues: {response.status_code}, {response.text}"
+        errText = f"<b>GooglePlaces[ERROR]</b>Failed to retrieve nearby: {response.status_code}, {response.text}"
         return {'errText': errText}
-
-# Foursquare APIにてチェックイン実行
-def chkin_venues(venueid):
-    url = 'https://api.foursquare.com/v2/checkins/add'
-    access_token = app.config['4SQ_ACCESS_TOKEN']
-    params = {
-        'oauth_token': access_token,
-        'venueId': venueid,
-        'broadcast': 'broadcast',
-        'v': '20230401',
-    }
-    response = requests.post(url, params=params)
-    if response.status_code == 200:
-        return '<b>4sq:</b>Check-in Succeed.'
-    else:
-        errText = f"<b>4sq[ERROR]</b>Failed to Check-in: {response.status_code}, {response.text}"
-        return errText

@@ -23,6 +23,5 @@ export FLASK_BLUESKY_ID='xxxxxx.bsky.social'
 export FLASK_BLUESKY_PASS=''
 export FLASK_BLUESKY_MAX_FILE_SIZE=1000000
 
-#Foursquare
-export FLASK_4SQ_PLACES_API_KEY=''
-export FLASK_4SQ_ACCESS_TOKEN=''
+#Google Places API
+export FLASK_GOOGLE_PLACES_API_KEY=''
