@@ -11,7 +11,7 @@ Twitter, Misskey, Blueskyにクロスポストを行うアプリケーション
 - TwitterのConsumer KeysとAuthentication Tokens(FreeでOK)
 - Misskeyのアクセストークン
 - BlueskyのIDとパスワード
-- Foursquare APIのPlaces API KeysとAccess Token
+- Google Places API(New)のAPI Key
 
 ## Google App Engineで動作させる場合
 
@@ -78,9 +78,8 @@ export FLASK_BLUESKY_ID='xxxxxx.bsky.social'
 export FLASK_BLUESKY_PASS=''
 export FLASK_BLUESKY_MAX_FILE_SIZE=1000000
 
-#Foursquare
-export FLASK_4SQ_PLACES_API_KEY=''
-export FLASK_4SQ_ACCESS_TOKEN=''
+#Google Places API
+export FLASK_GOOGLE_PLACES_API_KEY=''
 ```
 
 5. 環境変数を仮想環境に反映
@@ -110,11 +109,10 @@ gunicorn --workers 5 --bind 0.0.0.0:443 shanari.webapp:app --certfile fullchain.
 - テキストエリアに投稿内容を記述(各SNSの最大文字数は考慮せずそのまま流します)  
 - POSTをタップして投稿(投稿が終わると結果がボタンの下に表示されるかも)  
 - CLEARをタップして画面を初期化  
-- ピンボタンをタップして近所の施設を左スワイプでFoursquareにチェックイン
-- チェックイン後に投稿欄に施設情報が編集されるので必要に応じてテキストや画像を追加して投稿
+- ピンボタンをタップして近所の施設を左スワイプで投稿欄に施設情報が編集されるので必要に応じてテキストや画像を追加して投稿
 - 要件を満たしていればiOSでホーム画面に追加するとPWAぽく動作する(ようです)  
 - 同じく要件を満たしていればPC版chromeでアプリショートカット化が出来る(ようです)   
-- こんな感じの見た目です   
+- 概ねこんな感じの見た目です   
 ![image](https://github.com/Yogorouza/Shanari/assets/31218595/8b11df11-e5bf-4057-a432-f2e2565d2a0f)
 ![image](https://github.com/Yogorouza/Shanari/assets/31218595/54aa60fd-7d9c-4ca8-a5c1-8661ce6f3b2f)
 
