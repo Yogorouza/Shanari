@@ -43,6 +43,8 @@ document.addEventListener('drop', function(e) {
 
 // アップロード指定されたファイルを送信する
 function storePics(event) {
+    $('#resultMsg').html('<b>uploading...</b>');
+    document.getElementById('spinner').style.display = 'block';
     for (let file of event.target.files) {
         // 画像だけ
         if (file.type.indexOf('image') < 0) continue;
@@ -87,8 +89,9 @@ function postImg(formData) {
         contentType: false,
         timeout: 10000
     }).always(function(receivedData) {
+        document.getElementById('spinner').style.display = 'none';
         let resultMsg = receivedData;
-        resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
+        resultMsg = '<b>' + resultMsg.replace(/\r?\n/g, '<br>') + '</b>';
         $('#resultMsg').html(resultMsg);
     });
 };
