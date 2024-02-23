@@ -389,7 +389,7 @@ def get_nearby(lat, lng, radius=300, limit=20):
     headers = {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': api_key,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.addressComponents,places.googleMapsUri',
+        'X-Goog-FieldMask': 'places.displayName,places.addressComponents,places.googleMapsUri',
     }
     params = {
         'maxResultCount': limit,
