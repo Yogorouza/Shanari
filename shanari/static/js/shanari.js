@@ -136,6 +136,29 @@ function clearForm() {
         preview.removeChild(preview.firstChild);
     }
     document.forms['uploadForm'].reset();
+    updateCheckbox();
+}
+
+// チェックボックスの外観を更新する
+function updateCheckbox() {
+    let chk = document.getElementById('twitterCheck');
+    let el = document.getElementById('twitterCheck').nextElementSibling;
+    while (el) {
+        el.style.opacity = chk.checked ? "1" : "0.2";
+        el = el.nextElementSibling;
+    }
+    chk = document.getElementById('misskeyCheck');
+    el = document.getElementById('misskeyCheck').nextElementSibling;
+    while (el) {
+        el.style.opacity = chk.checked ? "1" : "0.2";
+        el = el.nextElementSibling;
+    }
+    chk = document.getElementById('blueskyCheck');
+    el = document.getElementById('blueskyCheck').nextElementSibling;
+    while (el) {
+        el.style.opacity = chk.checked ? "1" : "0.2";
+        el = el.nextElementSibling;
+    }
 }
 
 // 画像以外のform情報を送信(投稿実行)
@@ -192,25 +215,13 @@ $(function () {
 
 // チェックボックスの外観補助
 document.getElementById('twitterCheck').addEventListener('change', function() {
-    let el = this.nextElementSibling;
-    while (el) {
-      el.style.opacity = this.checked ? "1" : "0.2";
-      el = el.nextElementSibling;
-    }
+    updateCheckbox();
 });
 document.getElementById('misskeyCheck').addEventListener('change', function() {
-    let el = this.nextElementSibling;
-    while (el) {
-      el.style.opacity = this.checked ? "1" : "0.2";
-      el = el.nextElementSibling;
-    }
+    updateCheckbox();
 });
 document.getElementById('blueskyCheck').addEventListener('change', function() {
-    let el = this.nextElementSibling;
-    while (el) {
-      el.style.opacity = this.checked ? "1" : "0.2";
-      el = el.nextElementSibling;
-    }
+    updateCheckbox();
 });
 
 // 位置情報取得
