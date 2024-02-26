@@ -100,7 +100,6 @@ function postImg(file) {
 function removeImg() {
     // サーバの画像フォルダを初期化する
     let formData = new FormData();
-    $('#resultMsg').html('');
     $.ajax({
         url: '/clearImg',
         type: 'post',
@@ -110,8 +109,6 @@ function removeImg() {
         contentType: false,
         timeout: 10000
     }).always(function(receivedData) {
-        let resultMsg = receivedData;
-        resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
     });
     // プレビューを初期化する
     picCnt = 0;
@@ -194,39 +191,71 @@ function updateCheckbox() {
     }
 }
 
+// 投稿時のajax発呼処理
+function ajaxCall(url, data, snsName) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: url,
+            type: 'post',
+            data: data,
+            dataType: 'text',
+            processData: false,
+            contentType: false,
+            timeout: 20000,
+            success: function(response) {
+                let resultMsg = $('#resultMsg').html();
+                let responseMsg = '<br>' + response;
+                $('#resultMsg').html(resultMsg + responseMsg);
+                resolve(response);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (textStatus === "timeout") {
+                    let resultMsg = $('#resultMsg').html();
+                    let responseMsg = '<br><b>' + snsName + '</b>:Timeout';
+                    $('#resultMsg').html(resultMsg + responseMsg);
+                    resolve("Timeout occurred");
+                } else {
+                    reject(errorThrown);
+                }
+            }
+        });
+    });
+}
+
 // 画像以外のform情報を送信(投稿実行)
 function postTweet() {
-    $('#resultMsg').html('processing...');
+    let textarea = document.getElementById('postText');
+    if(textarea.value.trim() == ''){
+        $('#resultMsg').html('[ERROR]Content is blank.');
+        return;
+    }
+    $('#resultMsg').html('processing...<br>');
     $('#sendButton').prop('disabled',true);
     $('#clearButton').prop('disabled',true);
     $('#files').prop('disabled',true);
     document.getElementById('spinner').style.display = 'block';
     let form = $('#uploadForm').get()[0];
     let formData = new FormData(form);
-    let receivedData = ''
-    $.ajax({
-        url: '/postTweet',
-        type: 'post',
-        data: formData,
-        dataType: 'text',
-        processData: false,
-        contentType: false,
-        timeout: 30000
-    }).done(function(receivedData) {
-        resultMsg = receivedData;
-        new Promise((resolve) => {
-            if(resultMsg.indexOf('ERROR') == -1){
-                clearForm();
+    Promise.allSettled([
+        ajaxCall('/postTwitter', formData, 'Twitter'),
+        ajaxCall('/postMisskey', formData, 'Misskey'),
+        ajaxCall('/postBluesky', formData, 'Bluesky')
+    ]).then(function(results) {
+        let errFlg = 0;
+        results.forEach((result) => {
+            if (result.status === "fulfilled") {
+            } else {
+                errFlg = 1;
             }
-            resolve();
-        }).then(() => {
-            document.getElementById('spinner').style.display = 'none';
-            resultMsg = resultMsg.replace(/\r?\n/g, '<br>');
-            $('#resultMsg').html(resultMsg);
-            $('#sendButton').prop('disabled',false);
-            $('#clearButton').prop('disabled',false);
-            $('#files').prop('disabled',false);
         });
+        if(errFlg == 0){
+            removeImg();
+            clearForm();
+        }
+        document.getElementById('spinner').style.display = 'none';
+        $('#sendButton').prop('disabled',false);
+        $('#clearButton').prop('disabled',false);
+        $('#files').prop('disabled',false);
     });
 }
 

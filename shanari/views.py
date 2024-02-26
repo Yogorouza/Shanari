@@ -92,21 +92,14 @@ def clearImg():
         pass
     return resultText
 
-# --- 投稿処理 ---
-@app.route('/postTweet', methods=['POST'])
+# --- 投稿処理(Twitter) ---
+@app.route('/postTwitter', methods=['POST'])
 @flask_login.login_required
-def postTweet():
+def postTwitter():
     # 本文と投稿先の指定フラグを取得
     postText = request.form.get('postText', '')
     twitterCheck = request.form.get('twitterCheck', 'off')
-    misskeyCheck = request.form.get('misskeyCheck', 'off')
-    blueskyCheck = request.form.get('blueskyCheck', 'off')
     resultText = ''
-
-    # 本文が空白だったらメッセージを返す
-    if postText == '':
-        resultText = '[ERROR]Content is blank.'
-        return resultText
 
     # Twitter(Tweepy)
     if twitterCheck == 'on' and app.config['TWITTER_BEARAR_TOKEN'] != '':
@@ -144,7 +137,18 @@ def postTweet():
             resultText = '<b>Twitter</b>:OK(' + str(sec) + 'sec)'
     else:
         resultText = '<b>Twitter</b>:OFF'
-        
+
+    return resultText
+
+# --- 投稿処理(Misskey) ---
+@app.route('/postMisskey', methods=['POST'])
+@flask_login.login_required
+def postMisskey():
+    # 本文と投稿先の指定フラグを取得
+    postText = request.form.get('postText', '')
+    misskeyCheck = request.form.get('misskeyCheck', 'off')
+    resultText = ''
+
     # Misskey(Misskey.py)
     if misskeyCheck == 'on' and app.config['MISSKEY_TOKEN'] != '':
         try:
@@ -166,19 +170,30 @@ def postTweet():
             timeEnd = time.perf_counter()
         except misskey.exceptions.MisskeyAPIException as e:
             # Exceptionが空で戻ってくるのでとりあえず仕様書通りに捕捉
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey[ERROR]</b>MisskeyAPIException : ' + str(e)
+            resultText = '<b>Misskey[ERROR]</b>MisskeyAPIException : ' + str(e)
             pass
         except misskey.exceptions.MisskeyAuthorizeFailedException:
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey[ERROR]</b>MisskeyAuthorizeFailedException'
+            resultText = '<b>Misskey[ERROR]</b>MisskeyAuthorizeFailedException'
             pass
         except misskey.exceptions.MisskeyMiAuthFailedException:
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey[ERROR]</b>MisskeyMiAuthFailedException'
+            resultText = '<b>Misskey[ERROR]</b>MisskeyMiAuthFailedException'
             pass
         else:
             sec = round(timeEnd- timeStart, 1)
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OK(' + str(sec) + 'sec)'
+            resultText = '<b>Misskey:</b>OK(' + str(sec) + 'sec)'
     else:
-        resultText = resultText + ('' if resultText=='' else '\n') + '<b>Misskey:</b>OFF'
+        resultText = '<b>Misskey:</b>OFF'
+
+    return resultText
+
+# --- 投稿処理(Bluesky) ---
+@app.route('/postBluesky', methods=['POST'])
+@flask_login.login_required
+def postBluesky():
+    # 本文と投稿先の指定フラグを取得
+    postText = request.form.get('postText', '')
+    blueskyCheck = request.form.get('blueskyCheck', 'off')
+    resultText = ''
 
     # Bluesky(nanoatp)
     if blueskyCheck == 'on' and app.config['BLUESKY_PASS'] != '':
@@ -259,21 +274,15 @@ def postTweet():
             agent.post(record)
             timeEnd = time.perf_counter()
         except Exception as e:
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky[ERROR]</b>' + str(e)
+            resultText = '<b>Bluesky[ERROR]</b>' + str(e)
             pass
         else:
             sec = round(timeEnd- timeStart, 1)
-            resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OK(' + str(sec) + 'sec)'
+            resultText = '<b>Bluesky:</b>OK(' + str(sec) + 'sec)'
     else:
-        resultText = resultText + ('' if resultText=='' else '\n') + '<b>Bluesky:</b>OFF'
+        resultText = '<b>Bluesky:</b>OFF'
         
-    # エラーが発生していない場合は一時フォルダの画像をすべて削除
-    if resultText.find('ERROR') == -1:
-        for f in os.listdir(UPLOAD_FOLDER):
-            os.remove(os.path.join(UPLOAD_FOLDER, f))
-
     return resultText
-
 
 # --- Google Placesより周辺情報取得 ---
 @app.route('/getNearby', methods=['POST'])
