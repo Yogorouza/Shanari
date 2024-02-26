@@ -207,6 +207,8 @@ textarea {
     flex-direction: column;
     justify-content: flex-end;
     transition: 0.1s linear;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 .bottom-sheet.show {
     opacity: 1;

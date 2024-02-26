@@ -288,7 +288,7 @@ async function genBottomSheetContents() {
             }
             // 施設の取得に成功したら一覧生成
             let listSrc = '';
-            listSrc = '<div class="instructions">左スワイプで本文に入れます</div>';
+            listSrc = '<div class="instructions">左スワイプで本文に設定します</div>';
             listSrc += '<ul class="list-container" id="itemList">';
             receivedData.forEach(item => {
                let pref = item.addressComponents
