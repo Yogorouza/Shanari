@@ -4,8 +4,6 @@ var picCnt = 0;
 // eventからクリップボードのアイテムを取り出し送信する
 document.onpaste = function (event) {
     let items = (event.clipboardData || event.originalEvent.clipboardData).items;
-    $('#resultMsg').html('<b>uploading...</b>');
-    document.getElementById('spinner').style.display = 'block';
     for (let i = 0; i < items.length; i++) {
         let item = items[i];
         // 画像だけ
@@ -13,6 +11,8 @@ document.onpaste = function (event) {
             // 4件以上追加できない
             if (picCnt++ >= 4) return;
             // プレビュー表示して送信
+            $('#resultMsg').html('<b>uploading...</b>');
+            document.getElementById('spinner').style.display = 'block';
             let file = item.getAsFile();
             imgPreview(file);
             postImg(file);
@@ -27,14 +27,14 @@ document.addEventListener('dragover', function(e) {
 });
 document.addEventListener('drop', function(e) {
     e.preventDefault();
-    $('#resultMsg').html('<b>uploading...</b>');
-    document.getElementById('spinner').style.display = 'block';
     for (let file of e.dataTransfer.files) {
         // 画像だけ
         if (file.type.indexOf('image') < 0) continue;
         // 4件以上追加できない
         if (picCnt++ >= 4) break;
         // プレビュー表示して送信
+        $('#resultMsg').html('<b>uploading...</b>');
+        document.getElementById('spinner').style.display = 'block';
         imgPreview(file);
         postImg(file);
     }
