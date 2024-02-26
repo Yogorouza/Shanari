@@ -4,6 +4,8 @@ var picCnt = 0;
 // eventからクリップボードのアイテムを取り出し送信する
 document.onpaste = function (event) {
     let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    $('#resultMsg').html('<b>uploading...</b>');
+    document.getElementById('spinner').style.display = 'block';
     for (let i = 0; i < items.length; i++) {
         let item = items[i];
         // 画像だけ
@@ -13,9 +15,7 @@ document.onpaste = function (event) {
             // プレビュー表示して送信
             let file = item.getAsFile();
             imgPreview(file);
-            let formData = new FormData();
-            formData.append('pics', file);
-            postImg(formData);
+            postImg(file);
         }
     }
 }
@@ -27,18 +27,17 @@ document.addEventListener('dragover', function(e) {
 });
 document.addEventListener('drop', function(e) {
     e.preventDefault();
-    let formData = new FormData();
+    $('#resultMsg').html('<b>uploading...</b>');
+    document.getElementById('spinner').style.display = 'block';
     for (let file of e.dataTransfer.files) {
         // 画像だけ
         if (file.type.indexOf('image') < 0) continue;
         // 4件以上追加できない
         if (picCnt++ >= 4) break;
-        // プレビュー表示して送信用のformDataに追加する
+        // プレビュー表示して送信
         imgPreview(file);
-        formData.append('pics', file);
+        postImg(file);
     }
-    //送信
-    postImg(formData);
 });
 
 // アップロード指定されたファイルを送信する
@@ -50,12 +49,9 @@ function storePics(event) {
         if (file.type.indexOf('image') < 0) continue;
         // 4件以上追加できない
         if (picCnt++ >= 4) break;
-        // プレビュー表示して送信用のformDataに追加する
+        // プレビュー表示して送信
         imgPreview(file);
-        let formData = new FormData();
-        formData.append('pics', file);
-        //送信
-        postImg(formData);
+        postImg(file);
     }
 }
 
@@ -78,21 +74,25 @@ document.getElementById('previewArea').addEventListener('click', function(e) {
     removeImg();
 });
 
-// 画像をサーバに送信する
-function postImg(formData) {
-    $.ajax({
-        url: '/uploadImg',
-        type: 'post',
-        data: formData,
-        dataType: 'text',
-        processData: false,
-        contentType: false,
-        timeout: 10000
-    }).always(function(receivedData) {
-        document.getElementById('spinner').style.display = 'none';
-        let resultMsg = receivedData;
-        resultMsg = '<b>' + resultMsg.replace(/\r?\n/g, '<br>') + '</b>';
-        $('#resultMsg').html(resultMsg);
+// 画像をサーバに送信する(必要に応じて縮小する)
+function postImg(file) {
+    resizeImg(file).then(function(resizedBlob) {
+        let formData = new FormData();
+        formData.append('pics', resizedBlob, file.name);
+        $.ajax({
+            url: '/uploadImg',
+            type: 'post',
+            data: formData,
+            dataType: 'text',
+            processData: false,
+            contentType: false,
+            timeout: 10000
+        }).always(function(receivedData) {
+            document.getElementById('spinner').style.display = 'none';
+            let resultMsg = receivedData;
+            resultMsg = '<b>' + resultMsg.replace(/\r?\n/g, '<br>') + '</b>';
+            $('#resultMsg').html(resultMsg);
+        });
     });
 };
 
@@ -119,6 +119,39 @@ function removeImg() {
     while (preview.firstChild) {
         preview.removeChild(preview.firstChild);
     }
+}
+
+//ファイルサイズを1MBまで縮小する
+function resizeImg(file) {
+    return new Promise((resolve, reject) => {
+        var img = new Image();
+        img.onload = () => {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            var width = img.width;
+            var height = img.height;
+            var quality = 0.9; // 画質を維持するための初期品質値
+            // 画像を縮小する関数
+            const resize = () => {
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    if (blob.size <= 1.0 * 1024 * 1024) {
+                        resolve(blob); // サイズが要件を満たしたらPromiseを解決
+                    } else {
+                        // サイズがまだ大きい場合は、さらに縮小
+                        width *= 0.9; // 幅を10%縮小
+                        height *= 0.9; // 高さを10%縮小
+                        resize(); // 再帰的に縮小処理を呼び出し
+                    }
+                }, 'image/jpeg', quality);
+            };
+            resize(); // 最初の縮小処理を呼び出し
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file); // ファイルからURLを生成して画像を読み込む
+    });
 }
 
 // 機能を初期状態に戻す

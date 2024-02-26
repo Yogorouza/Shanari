@@ -211,22 +211,21 @@ def postTweet():
                             ogImageFilename = ogImageFilename.split('&')[0]
                             # 画像を保存
                             saveDownloadImage(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
+                            # 画像ファイルサイズ1MB上限対応
+                            MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
+                            for f in os.listdir(UPLOAD_FOLDER):
+                                imagePath = os.path.join(UPLOAD_FOLDER, f)
+                                # サイズ超過してれば縮小する
+                                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
+                                    continue
+                                with Image.open(imagePath) as im:
+                                    # 指定サイズ未満まで20%ちっこくしていく
+                                    compressImage(im, imagePath, MAX_FILE_SIZE)
                         except:
                             # タイトルが取得出来ていなかったらリンクカードの生成は行わない
                             if ogTitle is None or ogTitle == '':
                                 isLinkcardAttached = False
                             pass
-
-            # 画像ファイルサイズ1MB上限対応
-            MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
-            for f in os.listdir(UPLOAD_FOLDER):
-                imagePath = os.path.join(UPLOAD_FOLDER, f)
-                # サイズ超過してれば縮小する
-                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
-                    continue
-                with Image.open(imagePath) as im:
-                    # 指定サイズ未満まで20%ちっこくしていく
-                    compressImage(im, imagePath, MAX_FILE_SIZE)
 
             # 認証
             agent = BskyAgent(app.config['BLUESKY_AGENT'])
