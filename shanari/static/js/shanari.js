@@ -86,7 +86,7 @@ function postImg(file) {
             dataType: 'text',
             processData: false,
             contentType: false,
-            timeout: 10000
+            timeout: 20000
         }).always(function(receivedData) {
             document.getElementById('spinner').style.display = 'none';
             let resultMsg = receivedData;
