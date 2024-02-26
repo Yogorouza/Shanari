@@ -209,14 +209,10 @@ function ajaxCall(url, data, snsName) {
                 resolve(response);
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                if (textStatus === "timeout") {
-                    let resultMsg = $('#resultMsg').html();
-                    let responseMsg = '<br><b>' + snsName + '</b>:Timeout';
-                    $('#resultMsg').html(resultMsg + responseMsg);
-                    resolve("Timeout occurred");
-                } else {
-                    reject(errorThrown);
-                }
+                let resultMsg = $('#resultMsg').html();
+                let responseMsg = '<br><b>' + snsName + '[ERROR]</b>:' + textStatus;
+                $('#resultMsg').html(resultMsg + responseMsg);
+                reject(errorThrown);
             }
         });
     });
