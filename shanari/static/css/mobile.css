@@ -207,6 +207,8 @@ textarea {
     flex-direction: column;
     justify-content: flex-end;
     transition: 0.1s linear;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 .bottom-sheet.show {
     opacity: 1;
@@ -229,7 +231,6 @@ textarea {
     max-height: 100vh;
     height: 50vh;
     max-width: 1150px;
-    padding: 25px 30px;
     transform: translateY(100%);
     border-radius: 12px 12px 0 0;
     box-shadow: 0 10px 20px rgba(0,0,0,0.03);
@@ -252,8 +253,7 @@ textarea {
 .header .drag-icon {
     cursor: grab;
     user-select: none;
-    padding: 5px;
-    margin-top: -15px;
+    margin-top: 10px;
 }
 .header .drag-icon span {
     height: 4px;
@@ -265,7 +265,7 @@ textarea {
 .bottom-sheet .body {
     height: 100%;
     overflow-y: auto;
-    padding: 15px 0 40px;
+    padding: 5px 0 40px;
     scrollbar-width: none;
 }
 .bottom-sheet .body::-webkit-scrollbar {
@@ -313,7 +313,7 @@ textarea {
     font-size: 16px;
     color: #696969;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: -10px;
     padding: 10px;
     background-color: #f0f0f0;
     border-radius: 8px;
