@@ -78,6 +78,11 @@ textarea {
     font-size: small;
     color: #888;
 }
+#resultMsg {
+    border-left: 2px solid #BBB;
+    padding-left: 4px;
+    padding-top: 3px;
+}
 
 /*=Button===============================================*/
 .buttonPost {
