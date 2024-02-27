@@ -136,7 +136,7 @@ def postTwitter():
             sec = round(timeEnd- timeStart, 1)
             resultText = '<b>Twitter</b>:OK(' + str(sec) + 'sec)'
     else:
-        resultText = '<b>Twitter</b>:OFF'
+        resultText = '<b>Twitter</b>:Skip'
 
     return resultText
 
@@ -182,7 +182,7 @@ def postMisskey():
             sec = round(timeEnd- timeStart, 1)
             resultText = '<b>Misskey:</b>OK(' + str(sec) + 'sec)'
     else:
-        resultText = '<b>Misskey:</b>OFF'
+        resultText = '<b>Misskey:</b>Skip'
 
     return resultText
 
@@ -280,7 +280,7 @@ def postBluesky():
             sec = round(timeEnd- timeStart, 1)
             resultText = '<b>Bluesky:</b>OK(' + str(sec) + 'sec)'
     else:
-        resultText = '<b>Bluesky:</b>OFF'
+        resultText = '<b>Bluesky:</b>Skip'
         
     return resultText
 

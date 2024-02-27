@@ -30,14 +30,14 @@ p{
 
 /*=spinner===============================================*/
 .spinner {
-    display: inline-block;
+    visibility: hidden;
+    display: block;
     width: 10px;
     height: 10px;
     border: 3px solid #f3f3f3;
     border-radius: 50%;
     border-top: 2px solid #3498db;
     animation: spin 1s linear infinite;
-    display: none;
     margin-right: 5px;
 }
 @keyframes spin {

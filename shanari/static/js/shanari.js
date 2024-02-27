@@ -12,7 +12,7 @@ document.onpaste = function (event) {
             if (picCnt++ >= 4) return;
             // プレビュー表示して送信
             $('#resultMsg').html('<b>uploading...</b>');
-            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('spinner').style.visibility = 'visible';
             let file = item.getAsFile();
             imgPreview(file);
             postImg(file);
@@ -34,7 +34,7 @@ document.addEventListener('drop', function(e) {
         if (picCnt++ >= 4) break;
         // プレビュー表示して送信
         $('#resultMsg').html('<b>uploading...</b>');
-        document.getElementById('spinner').style.display = 'block';
+        document.getElementById('spinner').style.visibility = 'visible';
         imgPreview(file);
         postImg(file);
     }
@@ -43,7 +43,7 @@ document.addEventListener('drop', function(e) {
 // アップロード指定されたファイルを送信する
 function storePics(event) {
     $('#resultMsg').html('<b>uploading...</b>');
-    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('spinner').style.visibility = 'visible';
     for (let file of event.target.files) {
         // 画像だけ
         if (file.type.indexOf('image') < 0) continue;
@@ -72,6 +72,7 @@ function imgPreview(file) {
 // プレビュー画像がタップされたら添付ファイルを初期化する
 document.getElementById('previewArea').addEventListener('click', function(e) {
     removeImg();
+    $('#resultMsg').html(resultMsg);
 });
 
 // 画像をサーバに送信する(必要に応じて縮小する)
@@ -88,7 +89,7 @@ function postImg(file) {
             contentType: false,
             timeout: 20000
         }).always(function(receivedData) {
-            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('spinner').style.visibility = 'hidden';
             let resultMsg = receivedData;
             resultMsg = '<b>' + resultMsg.replace(/\r?\n/g, '<br>') + '</b>';
             $('#resultMsg').html(resultMsg);
@@ -229,7 +230,7 @@ function postTweet() {
     $('#sendButton').prop('disabled',true);
     $('#clearButton').prop('disabled',true);
     $('#files').prop('disabled',true);
-    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('spinner').style.visibility = 'visible';
     let form = $('#uploadForm').get()[0];
     let formData = new FormData(form);
     Promise.allSettled([
@@ -239,7 +240,8 @@ function postTweet() {
     ]).then(function(results) {
         let errFlg = 0;
         results.forEach((result) => {
-            if (result.status === "fulfilled") {
+            let resultMsg = $('#resultMsg').html();
+            if (result.status === "fulfilled" && resultMsg.indexOf('ERROR') == -1) {
             } else {
                 errFlg = 1;
             }
@@ -248,10 +250,13 @@ function postTweet() {
             removeImg();
             clearForm();
         }
-        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('spinner').style.visibility = 'hidden';
         $('#sendButton').prop('disabled',false);
         $('#clearButton').prop('disabled',false);
         $('#files').prop('disabled',false);
+        let resultMsg = $('#resultMsg').html();
+        resultMsg = resultMsg.replace('processing...','done.');
+        $('#resultMsg').html(resultMsg);
     });
 }
 
