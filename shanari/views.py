@@ -196,6 +196,7 @@ def postBluesky():
     postText = request.form.get('postText', '')
     blueskyCheck = request.form.get('blueskyCheck', 'off')
     resultText = ''
+    responseText = ''
 
     # Bluesky(nanoatp)
     if blueskyCheck == 'on' and app.config['BLUESKY_PASS'] != '':
@@ -286,14 +287,19 @@ def postBluesky():
                 embed = {"$type": "app.bsky.embed.images#main", "images": mediaList}
                 record = {"text": postText, "embed": embed}
             # 投稿
-            agent.post(record)
+            responseText = agent.post(record)
             timeEnd = time.perf_counter()
         except Exception as e:
             resultText = '<b>Bluesky[ERROR]</b>' + str(e)
             pass
         else:
             sec = round(timeEnd- timeStart, 1)
-            resultText = '<b>Bluesky:</b>OK(' + str(sec) + 'sec)'
+            isDebug = app.config['ENABLE_DEBUG']
+            if isDebug == '0':
+                responseText = ''
+            else:
+                responseText = '<br />' + json.dumps(responseText)
+            resultText = '<b>Bluesky:</b>OK(' + str(sec) + 'sec)' + responseText
     else:
         resultText = '<b>Bluesky:</b>Skip'
         

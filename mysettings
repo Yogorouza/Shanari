@@ -1,5 +1,6 @@
 #FLASKアプリケーション定義
 export FLASK_APP=shanari.webapp
+export FLASK_ENABLE_DEBUG='0'
 
 #認証関連(いい感じに変更して使ってください)
 export FLASK_SECRET_KEY='ac6adf3964047db6'

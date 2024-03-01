@@ -4,6 +4,7 @@ entrypoint: gunicorn -b :$PORT shanari.webapp:app
 
 env_variables:
   FLASK_APP: 'shanari.webapp'
+  FLASK_ENABLE_DEBUG: '0'
 
   #画像縮小をサーバ側で実行するか？(0:クライアントで縮小 1:サーバで縮小)
   FLASK_ENABLE_IMG_SERVER_COMPRESS: '1'
