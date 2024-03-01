@@ -295,7 +295,7 @@ def postBluesky():
         else:
             sec = round(timeEnd- timeStart, 1)
             isDebug = app.config['ENABLE_DEBUG']
-            if isDebug == '0':
+            if isDebug == 0:
                 responseText = ''
             else:
                 responseText = '<br />' + json.dumps(responseText)
