@@ -230,7 +230,7 @@ def postBluesky():
                             # 画像を保存
                             saveDownloadImage(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
                             # 画像ファイルサイズ1MB上限対応(クライアント縮小の場合はリンクカード用の画像をここで圧縮する)
-                            if enableServerCompress == '0':
+                            if enableServerCompress == 0:
                                 MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
                                 for f in os.listdir(UPLOAD_FOLDER):
                                     imagePath = os.path.join(UPLOAD_FOLDER, f)
@@ -247,7 +247,7 @@ def postBluesky():
                             pass
 
             # 画像ファイルサイズ1MB上限対応(サーバ縮小の場合はここで一括縮小する)
-            if enableServerCompress == '1':
+            if enableServerCompress == 1:
                 MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
                 for f in os.listdir(UPLOAD_FOLDER):
                     imagePath = os.path.join(UPLOAD_FOLDER, f)
