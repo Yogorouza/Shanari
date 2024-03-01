@@ -6,6 +6,9 @@ export FLASK_SECRET_KEY='ac6adf3964047db6'
 export FLASK_LOGIN_ID='user'
 export FLASK_LOGIN_PASSWORD='pass'
 
+#画像縮小をサーバ側で実行するか？(0:クライアントで縮小 1:サーバで縮小)
+export FLASK_ENABLE_IMG_SERVER_COMPRESS='1'
+
 #Twitter
 export FLASK_TWITTER_BEARAR_TOKEN=''
 export FLASK_TWITTER_CONSUMER_KEY=''

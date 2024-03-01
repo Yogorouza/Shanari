@@ -58,7 +58,8 @@ def logout():
 @app.route('/')
 @flask_login.login_required
 def index():
-    return render_template('postForm.html')
+    enableServerCompress = app.config['ENABLE_IMG_SERVER_COMPRESS']
+    return render_template('postForm.html', enableServerCompress=enableServerCompress)
 
 # --- 画像添付 ---
 @app.route('/uploadImg', methods=['POST'])
@@ -111,7 +112,7 @@ def postTwitter():
             api = tweepy.API(auth)
             # 画像アップロード
             mediaList = []
-            for f in os.listdir(UPLOAD_FOLDER):
+            for f in sorted(os.listdir(UPLOAD_FOLDER)):
                 image_path = os.path.join(UPLOAD_FOLDER, f)
                 media = api.media_upload(filename=image_path)
                 mediaList.append(media.media_id)
@@ -158,7 +159,7 @@ def postMisskey():
             api.token = app.config['MISSKEY_TOKEN']
             # 画像アップロード
             mediaList = []
-            for f in os.listdir(UPLOAD_FOLDER):
+            for f in sorted(os.listdir(UPLOAD_FOLDER)):
                 with open(os.path.join(UPLOAD_FOLDER, f), 'rb') as f:
                     data = api.drive_files_create(f)
                 mediaList.append(data['id']);
@@ -190,6 +191,7 @@ def postMisskey():
 @app.route('/postBluesky', methods=['POST'])
 @flask_login.login_required
 def postBluesky():
+    enableServerCompress = app.config['ENABLE_IMG_SERVER_COMPRESS']
     # 本文と投稿先の指定フラグを取得
     postText = request.form.get('postText', '')
     blueskyCheck = request.form.get('blueskyCheck', 'off')
@@ -226,28 +228,41 @@ def postBluesky():
                             ogImageFilename = ogImageFilename.split('&')[0]
                             # 画像を保存
                             saveDownloadImage(ogImage, os.path.join(UPLOAD_FOLDER, ogImageFilename))
-                            # 画像ファイルサイズ1MB上限対応
-                            MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
-                            for f in os.listdir(UPLOAD_FOLDER):
-                                imagePath = os.path.join(UPLOAD_FOLDER, f)
-                                # サイズ超過してれば縮小する
-                                if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
-                                    continue
-                                with Image.open(imagePath) as im:
-                                    # 指定サイズ未満まで20%ちっこくしていく
-                                    compressImage(im, imagePath, MAX_FILE_SIZE)
+                            # 画像ファイルサイズ1MB上限対応(クライアント縮小の場合はリンクカード用の画像をここで圧縮する)
+                            if enableServerCompress == '0':
+                                MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
+                                for f in os.listdir(UPLOAD_FOLDER):
+                                    imagePath = os.path.join(UPLOAD_FOLDER, f)
+                                    # サイズ超過してれば縮小する
+                                    if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
+                                        continue
+                                    with Image.open(imagePath) as im:
+                                        # 指定サイズ未満まで20%ちっこくしていく
+                                        compressImage(im, imagePath, MAX_FILE_SIZE)
                         except:
                             # タイトルが取得出来ていなかったらリンクカードの生成は行わない
                             if ogTitle is None or ogTitle == '':
                                 isLinkcardAttached = False
                             pass
 
+            # 画像ファイルサイズ1MB上限対応(サーバ縮小の場合はここで一括縮小する)
+            if enableServerCompress == '1':
+                MAX_FILE_SIZE = app.config['BLUESKY_MAX_FILE_SIZE']
+                for f in os.listdir(UPLOAD_FOLDER):
+                    imagePath = os.path.join(UPLOAD_FOLDER, f)
+                    # サイズ超過してれば縮小する
+                    if os.path.getsize(imagePath) <= MAX_FILE_SIZE:
+                        continue
+                    with Image.open(imagePath) as im:
+                        # 指定サイズ未満まで20%ちっこくしていく
+                        compressImage(im, imagePath, MAX_FILE_SIZE)
+
             # 認証
             agent = BskyAgent(app.config['BLUESKY_AGENT'])
             agent.login(identifier=app.config['BLUESKY_ID'], password=app.config['BLUESKY_PASS'])
             # 画像アップロード
             mediaList = []
-            for f in os.listdir(UPLOAD_FOLDER):
+            for f in sorted(os.listdir(UPLOAD_FOLDER)):
                 image = agent.uploadImage(os.path.join(UPLOAD_FOLDER, f))
                 mediaList.append(image)
             # 投稿情報生成

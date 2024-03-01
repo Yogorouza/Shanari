@@ -75,8 +75,36 @@ document.getElementById('previewArea').addEventListener('click', function(e) {
     $('#resultMsg').html(resultMsg);
 });
 
-// 画像をサーバに送信する(必要に応じて縮小する)
+// 画像をサーバに送信する
 function postImg(file) {
+    if(enableServerCompress == '1')
+        postImgNoCompress(file);
+    else
+        postImgWithCompress(file);
+};
+
+// 画像をサーバに送信する(縮小しない)
+function postImgNoCompress(file) {
+    let formData = new FormData();
+    formData.append('pics', file);
+    $.ajax({
+        url: '/uploadImg',
+        type: 'post',
+        data: formData,
+        dataType: 'text',
+        processData: false,
+        contentType: false,
+        timeout: 20000
+    }).always(function(receivedData) {
+        document.getElementById('spinner').style.visibility = 'hidden';
+        let resultMsg = receivedData;
+        resultMsg = '<b>' + resultMsg.replace(/\r?\n/g, '<br>') + '</b>';
+        $('#resultMsg').html(resultMsg);
+    });
+};
+
+// 画像をサーバに送信する(必要に応じて縮小する)
+function postImgWithCompress(file) {
     resizeImg(file).then(function(resizedBlob) {
         let formData = new FormData();
         formData.append('pics', resizedBlob, file.name);
