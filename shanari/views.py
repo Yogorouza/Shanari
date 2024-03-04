@@ -1,4 +1,4 @@
-import os, io, datetime, time, requests, tempfile, json
+import os, io, datetime, time, requests, tempfile, json, re
 import flask_login, flask_wtf, wtforms
 import tweepy, misskey
 import py_ogp_parser.parser
@@ -286,6 +286,10 @@ def postBluesky():
                 # 画像添付あり
                 embed = {"$type": "app.bsky.embed.images#main", "images": mediaList}
                 record = {"text": postText, "embed": embed}
+            # ハッシュタグ追加
+            facets = getHashTagFacets(postText)
+            if facets:
+                record["facets"] = facets
             # 投稿
             responseText = agent.post(record)
             timeEnd = time.perf_counter()
@@ -313,6 +317,26 @@ def getNearby():
     lng = request.form.get('lng', '')
     nearby = get_nearby(lat, lng)
     return nearby
+
+# ハッシュタグ用facetsを生成する
+def getHashTagFacets(text):
+    pattern = r"#(\w+)"
+    facets = []
+    for match in re.finditer(pattern, text):
+        hashtag = match.group(0)
+        startIdxChar = match.start()
+        endIdxChar = match.end()
+        byteStart = len(text[:startIdxChar].encode('utf-8'))
+        byteEnd = len(text[:endIdxChar].encode('utf-8'))
+        facet = {
+            'index': {'byteStart': byteStart, 'byteEnd': byteEnd},
+            'features': [{
+                'tag': hashtag.replace('#', ''),
+                '$type': 'app.bsky.richtext.facet#tag'
+            }]
+        }
+        facets.append(facet)
+    return facets
 
 # 指定サイズまで画像ファイルサイズを縮小
 def compressImage(im, outputPath, maxSize):
