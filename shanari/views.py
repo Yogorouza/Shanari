@@ -291,6 +291,8 @@ def postBluesky():
             if facets:
                 record["facets"] = facets
             # 投稿
+            langs = ['ja']
+            record["langs"] = langs
             responseText = agent.post(record)
             timeEnd = time.perf_counter()
         except Exception as e:
