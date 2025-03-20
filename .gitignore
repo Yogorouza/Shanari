@@ -1,0 +1,17 @@
+# 仮想環境
+.venv/
+
+# VSCode設定
+.vscode/
+
+# Python特有のファイル
+flask_session/
+__pycache__/
+*.py[cod]
+*.so
+
+# ログと一時ファイル
+*.log
+*.tmp
+.mysettings
+app.yaml

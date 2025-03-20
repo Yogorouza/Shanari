@@ -284,7 +284,7 @@ def postBluesky():
                     record = {"text": postText}
             else:
                 # 画像添付あり
-                embed = {"$type": "app.bsky.embed.images#main", "images": mediaList}
+                embed = {"$type": "app.bsky.embed.images", "images": mediaList}
                 record = {"text": postText, "embed": embed}
             # ハッシュタグ追加
             facets = getHashTagFacets(postText)
