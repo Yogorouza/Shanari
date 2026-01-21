@@ -1,4 +1,4 @@
-runtime: python39
+runtime: python312
 env: standard
 entrypoint: gunicorn -b :$PORT shanari.webapp:app
 
