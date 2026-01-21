@@ -1,5 +1,6 @@
 # 仮想環境
 .venv/
+venv/
 
 # VSCode設定
 .vscode/
